@@ -1,0 +1,2728 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Alex Academy — ERP</title>
+<style>
+:root{
+  --ink:#1a1a2e;--ink-s:#4a4a6a;--ink-m:#9090aa;
+  --surf:#f4f5f8;--white:#fff;--brd:#e2e2ec;
+  --acc:#2d7a3a;--acc-lt:#eaf5ec;--acc-d:#1e5429;
+  --grn:#16a34a;--grn-lt:#dcfce7;
+  --amb:#d97706;--amb-lt:#fef3c7;
+  --red:#dc2626;--red-lt:#fee2e2;
+  --r:10px;--sh:0 1px 4px rgba(0,0,0,.08);
+  --sw:240px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,sans-serif;background:var(--surf);color:var(--ink);font-size:14px;-webkit-tap-highlight-color:transparent}
+button{cursor:pointer;font-family:inherit;-webkit-appearance:none}
+input,select,textarea{font-family:inherit}
+
+/* LAYOUT */
+.app{display:flex;min-height:100vh}
+
+/* SIDEBAR */
+.sidebar{
+  width:var(--sw);background:var(--ink);color:#e8e8f0;
+  display:flex;flex-direction:column;flex-shrink:0;
+  position:fixed;top:0;left:0;height:100vh;overflow-y:auto;z-index:200;
+  transition:transform .25s ease;
+}
+.sidebar.hidden{transform:translateX(-100%)}
+.sb-brand{padding:20px 18px 16px;border-bottom:1px solid rgba(255,255,255,.08)}
+.sb-brand .name{font-size:16px;font-weight:800;color:#fff;letter-spacing:-.3px}
+.sb-brand .sub{font-size:11px;color:rgba(255,255,255,.4);margin-top:3px}
+.sb-nav{padding:10px 8px;flex:1}
+.nav-sec{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.3);padding:14px 10px 5px}
+.nav-item{
+  display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;
+  font-size:13.5px;color:rgba(255,255,255,.65);
+  transition:background .15s,color .15s;cursor:pointer;border:none;
+  background:none;width:100%;text-align:left;
+}
+.nav-item:hover{background:rgba(255,255,255,.07);color:#fff}
+.nav-item.active{background:var(--acc);color:#fff}
+.nav-item .ic{width:20px;text-align:center;font-size:15px;flex-shrink:0}
+.sb-foot{padding:14px 18px;border-top:1px solid rgba(255,255,255,.08);font-size:11px;color:rgba(255,255,255,.3)}
+
+/* OVERLAY para móvil */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:199}
+.overlay.show{display:block}
+
+/* MAIN */
+.main{margin-left:var(--sw);flex:1;display:flex;flex-direction:column;min-height:100vh}
+
+/* TOPBAR */
+.topbar{
+  background:var(--white);border-bottom:1px solid var(--brd);
+  padding:0 20px;height:54px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:100;gap:10px;
+}
+.topbar-left{display:flex;align-items:center;gap:10px}
+.menu-btn{display:none;background:none;border:none;font-size:22px;padding:4px;color:var(--ink)}
+.topbar-title{font-size:15px;font-weight:700;white-space:nowrap}
+.topbar-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+
+/* CONTENT */
+.content{padding:20px;flex:1}
+
+/* CARDS */
+.card{background:var(--white);border-radius:var(--r);border:1px solid var(--brd);box-shadow:var(--sh)}
+.p16{padding:16px}.p20{padding:20px}
+
+/* KPI */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px}
+.kpi{background:var(--white);border:1px solid var(--brd);border-radius:var(--r);padding:16px;box-shadow:var(--sh)}
+.kpi-lbl{font-size:11px;font-weight:600;color:var(--ink-m);text-transform:uppercase;letter-spacing:.05em}
+.kpi-val{font-size:24px;font-weight:800;color:var(--ink);margin-top:5px;letter-spacing:-.5px}
+.kpi-sub{font-size:11.5px;color:var(--ink-m);margin-top:2px}
+.kpi.grn .kpi-val{color:var(--grn)}
+.kpi.amb .kpi-val{color:var(--amb)}
+.kpi.acc .kpi-val{color:var(--acc)}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600;border:none;transition:opacity .15s,transform .1s;white-space:nowrap}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:var(--acc);color:#fff}
+.btn-primary:hover{background:var(--acc-d)}
+.btn-secondary{background:var(--surf);color:var(--ink);border:1px solid var(--brd)}
+.btn-green{background:var(--grn);color:#fff}
+.btn-red{background:var(--red);color:#fff}
+.btn-sm{padding:5px 10px;font-size:12px;border-radius:6px}
+.btn-xs{padding:3px 8px;font-size:11px;border-radius:5px}
+
+/* BADGE */
+.badge{display:inline-flex;align-items:center;padding:3px 8px;border-radius:20px;font-size:11.5px;font-weight:700}
+.b-grn{background:var(--grn-lt);color:var(--grn)}
+.b-amb{background:var(--amb-lt);color:var(--amb)}
+.b-red{background:var(--red-lt);color:var(--red)}
+.b-gray{background:var(--surf);color:var(--ink-s);border:1px solid var(--brd)}
+.b-acc{background:var(--acc-lt);color:var(--acc)}
+
+/* TOOLBAR */
+.toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.search-box{display:flex;align-items:center;gap:8px;background:var(--white);border:1px solid var(--brd);border-radius:8px;padding:7px 12px;flex:1;min-width:160px}
+.search-box input{border:none;outline:none;font-size:13.5px;background:transparent;width:100%;color:var(--ink)}
+select.flt{border:1px solid var(--brd);border-radius:8px;padding:7px 10px;font-size:13px;color:var(--ink);background:var(--white);outline:none}
+
+/* TABLE */
+.tbl-wrap{overflow-x:auto;border-radius:var(--r);border:1px solid var(--brd);background:var(--white)}
+table{width:100%;border-collapse:collapse}
+thead th{text-align:left;padding:10px 14px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-m);background:var(--surf);border-bottom:1px solid var(--brd);white-space:nowrap}
+tbody tr{border-bottom:1px solid var(--brd);transition:background .1s}
+tbody tr:last-child{border:none}
+tbody tr:hover{background:var(--surf)}
+tbody td{padding:11px 14px;font-size:13px;vertical-align:middle}
+.td-n{font-weight:700}
+.td-s{font-size:11.5px;color:var(--ink-m);margin-top:1px}
+
+/* TABS */
+.tabs{display:flex;border-bottom:1px solid var(--brd);margin-bottom:16px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tab-btn{padding:9px 14px;font-size:13px;font-weight:600;border:none;background:none;color:var(--ink-m);border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer;white-space:nowrap;transition:color .15s,border-color .15s}
+.tab-btn.active{color:var(--acc);border-color:var(--acc)}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(10,10,30,.45);z-index:300;align-items:flex-start;justify-content:center;padding:20px 12px;overflow-y:auto}
+.modal-overlay.open{display:flex}
+.modal{background:var(--white);border-radius:14px;width:100%;max-width:580px;box-shadow:0 20px 60px rgba(0,0,0,.2);animation:su .2s ease}
+@keyframes su{from{transform:translateY(16px);opacity:0}to{transform:none;opacity:1}}
+.modal-hd{padding:18px 20px 14px;border-bottom:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between}
+.modal-hd h3{font-size:15px;font-weight:800}
+.modal-bd{padding:18px 20px}
+.modal-ft{padding:14px 20px;border-top:1px solid var(--brd);display:flex;justify-content:flex-end;gap:8px}
+.btn-x{background:none;border:none;font-size:22px;color:var(--ink-m);line-height:1;cursor:pointer;padding:2px}
+
+/* FORM */
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.fgrp{display:flex;flex-direction:column;gap:4px}
+.fgrp.full{grid-column:1/-1}
+.lbl{font-size:11.5px;font-weight:700;color:var(--ink-s)}
+.inp{border:1px solid var(--brd);border-radius:7px;padding:8px 10px;font-size:13.5px;color:var(--ink);background:var(--white);outline:none;transition:border-color .15s;width:100%}
+.inp:focus{border-color:var(--acc)}
+textarea.inp{resize:vertical;min-height:64px}
+.fsec{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-m);grid-column:1/-1;margin-top:6px;padding-bottom:6px;border-bottom:1px solid var(--brd)}
+
+/* UPLOAD */
+.upload-z{border:2px dashed var(--brd);border-radius:10px;padding:28px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s}
+.upload-z:hover{border-color:var(--acc);background:var(--acc-lt)}
+.upload-z .ui{font-size:32px;margin-bottom:8px}
+.upload-z p{font-size:13px;color:var(--ink-s)}
+.upload-z small{font-size:11.5px;color:var(--ink-m)}
+
+/* AI */
+.ai-res{background:var(--acc-lt);border:1px solid rgba(45,122,58,.2);border-radius:10px;padding:14px 16px;margin-bottom:14px}
+.ai-res-t{font-size:11px;font-weight:800;color:var(--acc);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px}
+.ai-think{display:flex;align-items:center;gap:10px;padding:14px;background:var(--acc-lt);border-radius:10px;font-size:13.5px;color:var(--acc);font-weight:600}
+.spin{width:18px;height:18px;border-radius:50%;border:2px solid var(--acc-lt);border-top-color:var(--acc);animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* PROGRESS */
+.pb-w{background:var(--brd);border-radius:99px;height:6px;overflow:hidden}
+.pb-f{height:100%;border-radius:99px;background:var(--acc);transition:width .4s}
+
+/* TOAST */
+.toast{position:fixed;bottom:20px;right:20px;left:20px;max-width:360px;margin:0 auto;background:var(--ink);color:#fff;padding:12px 16px;border-radius:10px;font-size:13.5px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.25);z-index:999;animation:fi .2s ease;display:none;text-align:center}
+.toast.show{display:block}
+@keyframes fi{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* SECTION HEADER */
+.sec-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;gap:10px;flex-wrap:wrap}
+.sec-hd h2{font-size:17px;font-weight:800}
+
+/* SCREENS */
+.screen{display:none}
+.screen.active{display:block}
+
+/* AVATAR */
+.av{width:40px;height:40px;border-radius:50%;background:var(--acc);color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;flex-shrink:0}
+
+/* PAY ROW */
+.pay-row{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--brd)}
+.pay-row:last-child{border:none}
+
+/* FICHA */
+.ficha-hd{display:flex;align-items:flex-start;gap:14px;padding:18px 20px;border-bottom:1px solid var(--brd)}
+
+/* DOC GRID */
+.doc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.doc-card{background:var(--white);border:1px solid var(--brd);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;transition:border-color .15s,box-shadow .15s;text-align:center}
+.doc-card:hover{border-color:var(--acc);box-shadow:0 0 0 3px var(--acc-lt)}
+.doc-card .di{font-size:28px}
+.doc-card .dn{font-size:12px;font-weight:700}
+.doc-card .dm{font-size:11px;color:var(--ink-m)}
+
+/* BAR CHART */
+.bc{display:flex;align-items:flex-end;gap:6px;height:90px;padding:0 2px}
+.bc-col{display:flex;flex-direction:column;align-items:center;gap:3px;flex:1}
+.bc-bar{width:100%;border-radius:4px 4px 0 0;min-height:4px}
+.bc-lbl{font-size:9px;color:var(--ink-m);white-space:nowrap}
+.bc-val{font-size:9px;font-weight:700;color:var(--ink-s)}
+
+/* IRPF */
+.irpf-box{background:linear-gradient(135deg,#1a1a2e,#2d3a5e);border-radius:var(--r);padding:20px;color:#fff}
+.irpf-box h3{font-size:12px;font-weight:800;opacity:.7;text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px}
+.irpf-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.1)}
+.irpf-row:last-of-type{border:none}
+.irpf-row .nm{font-size:12.5px;opacity:.75}
+.irpf-row .vl{font-size:15px;font-weight:800}
+.irpf-row .vl.g{color:#4ade80}
+.irpf-row .vl.a{color:#fbbf24}
+.irpf-disc{font-size:11px;opacity:.4;margin-top:12px}
+
+/* GRUPO CARD */
+.grupo-card{background:var(--white);border:1px solid var(--brd);border-radius:var(--r);padding:16px;box-shadow:var(--sh)}
+.grupos-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+
+/* INFO PILL */
+.info-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;background:var(--surf);border:1px solid var(--brd);border-radius:20px;font-size:12px;color:var(--ink-s);margin:2px}
+
+/* DASH ROW */
+.dash-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+
+/* ALERTA MÉDICA */
+.alerta-med{background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:8px 12px;font-size:12px;color:#c2410c;margin-top:10px;display:flex;gap:6px;align-items:flex-start}
+
+/* MOBILE */
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%)}
+  .sidebar.open{transform:none}
+  .main{margin-left:0}
+  .menu-btn{display:block}
+  .dash-row{grid-template-columns:1fr}
+  .kpi-grid{grid-template-columns:1fr 1fr}
+  .fg{grid-template-columns:1fr}
+  .fgrp.full{grid-column:1}
+  .fsec{grid-column:1}
+  .content{padding:14px}
+  .topbar{padding:0 14px;height:50px}
+  .topbar-right .btn span{display:none}
+  .sec-hd{gap:8px}
+  thead th:nth-child(n+4){display:none}
+  .grupos-grid{grid-template-columns:1fr}
+  .modal-overlay{padding:10px 6px}
+  .modal-bd{max-height:60vh;overflow-y:auto}
+  .bc-val{display:none}
+  .toast{left:10px;right:10px;bottom:10px}
+}
+@media(max-width:400px){
+  .kpi-grid{grid-template-columns:1fr}
+  .topbar-right .btn-secondary{display:none}
+}
+
+/* TIPO BTN */
+.tipo-btn{padding:9px 10px;border-radius:8px;border:1.5px solid var(--brd);background:var(--white);font-size:12.5px;font-weight:600;color:var(--ink-s);cursor:pointer;text-align:left;transition:all .15s}
+.tipo-btn:hover{border-color:var(--acc);color:var(--acc);background:var(--acc-lt)}
+.tipo-btn.active{border-color:var(--acc);background:var(--acc);color:#fff}
+
+/* SERV CARD */
+.serv-cat{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-m);margin:14px 0 8px}
+.serv-items{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
+.serv-item{background:var(--surf);border:1.5px solid var(--brd);border-radius:10px;padding:12px 14px;cursor:pointer;transition:all .15s}
+.serv-item:hover{border-color:var(--acc);background:var(--acc-lt)}
+.serv-item .si-nom{font-size:13px;font-weight:700;margin-bottom:3px}
+.serv-item .si-desc{font-size:11.5px;color:var(--ink-m)}
+.serv-item .si-precio{font-size:16px;font-weight:800;color:var(--acc);margin-top:6px}
+@media(max-width:600px){.serv-items{grid-template-columns:1fr 1fr}}
+
+/* UTILS */
+.flex{display:flex}.items-c{align-items:center}.between{justify-content:space-between}
+.gap8{gap:8px}.gap12{gap:12px}.gap16{gap:16px}
+.mt8{margin-top:8px}.mt12{margin-top:12px}.mt16{margin-top:16px}.mt20{margin-top:20px}
+.fw7{font-weight:700}.fw8{font-weight:800}
+.text-m{color:var(--ink-m)}.text-s{color:var(--ink-s)}
+.text-sm{font-size:12px}.text-xs{font-size:11px}
+.w100{width:100%}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sb-brand">
+    <div class="name">🎓 Alex Academy</div>
+    <div class="sub">Panel de gestión · 2025-2026</div>
+  </div>
+  <nav class="sb-nav">
+    <div class="nav-sec">Principal</div>
+    <button class="nav-item active" onclick="go('dashboard')"><span class="ic">📊</span>Dashboard</button>
+    <div class="nav-sec">Gestión</div>
+    <button class="nav-item" onclick="go('alumnos')"><span class="ic">👤</span>Alumnos</button>
+    <button class="nav-item" onclick="go('grupos')"><span class="ic">👥</span>Grupos</button>
+    <button class="nav-item" onclick="go('ingresos')"><span class="ic">💰</span>Ingresos</button>
+    <button class="nav-item" onclick="go('gastos')"><span class="ic">📋</span>Gastos</button>
+    <div class="nav-sec">Más</div>
+    <button class="nav-item" onclick="go('documentos')"><span class="ic">📁</span>Documentos</button>
+    <button class="nav-item" onclick="go('irpf')"><span class="ic">🏛️</span>Ayuda IRPF</button>
+    <button class="nav-item" onclick="go('config')"><span class="ic">⚙️</span>Configuración</button>
+  </nav>
+  <div class="sb-foot">Alex Academy · v2.0</div>
+</aside>
+<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+      <div class="topbar-title" id="topTitle">Dashboard</div>
+    </div>
+    <div class="topbar-right">
+      <button class="btn btn-secondary btn-sm" onclick="openM('m-matricula')"><span>📄</span><span>Nueva matrícula</span></button>
+      <button class="btn btn-primary btn-sm" onclick="openM('m-alumno')"><span>➕</span><span>Alumno</span></button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ═══ DASHBOARD ═══ -->
+    <div class="screen active" id="screen-dashboard">
+      <div class="sec-hd"><h2>Dashboard</h2><span class="text-m text-sm" id="dashFecha"></span></div>
+      <div class="kpi-grid" id="kpiGrid"></div>
+      <div class="dash-row">
+        <div class="card p16">
+          <div class="flex between items-c" style="margin-bottom:14px">
+            <span class="fw8" style="font-size:13.5px">Ingresos vs Gastos 2025</span>
+            <span class="badge b-acc">Mensual</span>
+          </div>
+          <div class="bc" id="barChart"></div>
+          <div class="flex gap8" style="margin-top:10px">
+            <span class="text-xs text-m flex items-c gap8"><span style="width:8px;height:8px;border-radius:2px;background:var(--acc);display:inline-block"></span>Ingresos</span>
+            <span class="text-xs text-m flex items-c gap8"><span style="width:8px;height:8px;border-radius:2px;background:var(--amb);display:inline-block"></span>Gastos</span>
+          </div>
+        </div>
+        <div class="card p16">
+          <div class="fw8 mt0" style="font-size:13.5px;margin-bottom:12px">⚠️ Pendientes de cobro</div>
+          <div id="pendientesList"></div>
+        </div>
+      </div>
+      <div class="card p16">
+        <div class="fw8" style="font-size:13.5px;margin-bottom:14px">Alumnos por grupo</div>
+        <div id="gruposBars"></div>
+      </div>
+    </div>
+
+    <!-- ═══ ALUMNOS ═══ -->
+    <div class="screen" id="screen-alumnos">
+      <div class="sec-hd">
+        <h2>Alumnos <span class="badge b-acc" id="cntAlumnos"></span></h2>
+        <div class="flex gap8">
+          <button class="btn btn-secondary btn-sm" onclick="openM('m-matricula')">📄 Subir matrícula</button>
+          <button class="btn btn-primary btn-sm" onclick="openM('m-alumno')">➕ Nuevo</button>
+        </div>
+      </div>
+      <div class="toolbar">
+        <div class="search-box"><span>🔍</span><input id="srcAlumno" placeholder="Buscar alumno..." oninput="filtA()"></div>
+        <select class="flt" id="fltGrupo" onchange="filtA()">
+          <option value="">Todos los grupos</option>
+          <option>STARTERS · L-X 17:25</option>
+          <option>MOVERS+ · M-J 17:25</option>
+          <option>FLYERS+ · M-J 18:30</option>
+          <option>KET · L-X 18:30</option>
+          <option>KET+ · M-J 15:15</option>
+          <option>PET · L-X 15:15</option>
+          <option>PET+ · M-J 16:20</option>
+          <option>FIRST · L-X 16:20</option>
+        </select>
+        <select class="flt" id="fltPago" onchange="filtA()">
+          <option value="">Todos</option>
+          <option value="pagado">✅ Pagados</option>
+          <option value="pendiente">⚠️ Pendientes</option>
+        </select>
+      </div>
+      <div class="tbl-wrap">
+        <table><thead><tr>
+          <th>Alumno</th><th>Grupo</th><th>Nivel</th><th>Pago</th><th>Cuota</th><th></th>
+        </tr></thead>
+        <tbody id="tblAlumnos"></tbody></table>
+      </div>
+    </div>
+
+    <!-- ═══ FICHA ═══ -->
+    <div class="screen" id="screen-ficha">
+      <button class="btn btn-secondary btn-sm" onclick="go('alumnos')" style="margin-bottom:14px">← Volver</button>
+      <div class="card" id="fichaBox"></div>
+    </div>
+
+    <!-- ═══ GRUPOS ═══ -->
+    <div class="screen" id="screen-grupos">
+      <div class="sec-hd"><h2>Grupos</h2><button class="btn btn-primary btn-sm" onclick="openM('m-grupo')">➕ Nuevo grupo</button></div>
+      <div class="grupos-grid" id="gruposGrid"></div>
+    </div>
+
+    <!-- ═══ INGRESOS ═══ -->
+    <div class="screen" id="screen-ingresos">
+      <div class="sec-hd">
+        <h2>Ingresos</h2>
+        <div class="flex gap8">
+          <select class="flt" id="fltMes" onchange="filtR()">
+            <option value="junio">Junio 2025</option>
+            <option value="mayo">Mayo 2025</option>
+          </select>
+          <button class="btn btn-primary btn-sm" onclick="openM('m-servicio')">➕ Registrar cobro</button>
+        </div>
+      </div>
+      <div class="kpi-grid" id="kpiIngresos"></div>
+
+      <div class="tabs" style="margin-bottom:14px">
+        <button class="tab-btn active" onclick="ingTab(this,'ing-cuotas')">📋 Cuotas</button>
+        <button class="tab-btn" onclick="ingTab(this,'ing-servicios')">⭐ Servicios extra</button>
+        <button class="tab-btn" onclick="ingTab(this,'ing-historial')">🕐 Historial</button>
+      </div>
+
+      <!-- TAB CUOTAS -->
+      <div id="ing-cuotas">
+        <div class="toolbar">
+          <div class="search-box"><span>🔍</span><input id="srcRecibo" placeholder="Buscar alumno..." oninput="filtR()"></div>
+          <select class="flt" id="fltEPago" onchange="filtR()">
+            <option value="">Todos</option>
+            <option value="pagado">✅ Pagados</option>
+            <option value="pendiente">⚠️ Pendientes</option>
+          </select>
+        </div>
+        <div class="tbl-wrap">
+          <table><thead><tr>
+            <th>Alumno</th><th>Grupo</th><th>Importe</th><th>Tipo</th><th>Estado</th><th></th>
+          </tr></thead>
+          <tbody id="tblRecibos"></tbody></table>
+        </div>
+      </div>
+
+      <!-- TAB SERVICIOS ADICIONALES -->
+      <div id="ing-servicios" style="display:none">
+        <div class="toolbar">
+          <div class="search-box"><span>🔍</span><input id="srcServicio" placeholder="Buscar alumno o servicio..." oninput="filtS()"></div>
+          <select class="flt" id="fltTipoServ" onchange="filtS()">
+            <option value="">Todos los servicios</option>
+            <option value="particular">🎯 Clase particular</option>
+            <option value="bono">🎟️ Bono 10 clases</option>
+            <option value="taller">🎨 Taller Let's Play</option>
+            <option value="matricula">📝 Matrícula</option>
+            <option value="material">📚 Material</option>
+          </select>
+          <select class="flt" id="fltEServ" onchange="filtS()">
+            <option value="">Todos</option>
+            <option value="pagado">✅ Pagados</option>
+            <option value="pendiente">⚠️ Pendientes</option>
+          </select>
+        </div>
+        <div class="card p16" style="margin-bottom:14px">
+          <div class="fw8" style="font-size:13px;margin-bottom:12px">📌 Catálogo de servicios — toca para registrar un cobro</div>
+          <div id="catalogoServicios"></div>
+        </div>
+        <div class="fw8" style="font-size:13px;margin-bottom:10px">Cobros registrados este mes</div>
+        <div class="tbl-wrap">
+          <table><thead><tr>
+            <th>Alumno</th><th>Servicio</th><th>Fecha</th><th>Importe</th><th>Estado</th><th></th>
+          </tr></thead>
+          <tbody id="tblServicios"></tbody></table>
+        </div>
+      </div>
+
+      <!-- TAB HISTORIAL -->
+      <div id="ing-historial" style="display:none">
+        <div class="tbl-wrap">
+          <table><thead><tr>
+            <th>Alumno</th><th>Concepto</th><th>Fecha</th><th>Importe</th><th>Categoría</th>
+          </tr></thead>
+          <tbody id="tblHistorial"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ GASTOS ═══ -->
+    <div class="screen" id="screen-gastos">
+      <div class="sec-hd">
+        <h2>Gastos</h2>
+        <div class="flex gap8">
+          <button class="btn btn-secondary btn-sm" onclick="openM('m-factura')">📄 Factura IA</button>
+          <button class="btn btn-primary btn-sm" onclick="openM('m-gasto')">➕ Añadir</button>
+        </div>
+      </div>
+      <div class="kpi-grid" id="kpiGastos"></div>
+      <div class="toolbar">
+        <div class="search-box"><span>🔍</span><input id="srcGasto" placeholder="Buscar proveedor..." oninput="filtG()"></div>
+        <select class="flt" id="fltCat" onchange="filtG()">
+          <option value="">Todas las categorías</option>
+          <option>Alquiler</option><option>Luz</option><option>Internet</option>
+          <option>Autónomos</option><option>Gestoría</option><option>Material</option>
+          <option>Publicidad</option><option>Limpieza</option>
+        </select>
+      </div>
+      <div class="tbl-wrap">
+        <table><thead><tr>
+          <th>Proveedor</th><th>Categoría</th><th>Fecha</th><th>Total</th><th>Estado</th><th></th>
+        </tr></thead>
+        <tbody id="tblGastos"></tbody></table>
+      </div>
+    </div>
+
+    <!-- ═══ DOCUMENTOS ═══ -->
+    <div class="screen" id="screen-documentos">
+      <div class="sec-hd"><h2>Documentos</h2><button class="btn btn-primary btn-sm">➕ Subir</button></div>
+      <div class="toolbar"><div class="search-box"><span>🔍</span><input placeholder="Buscar documento..."></div></div>
+      <div class="fw8 mt8" style="font-size:13px;margin-bottom:10px">Matrículas</div>
+      <div class="doc-grid" id="docMatriculas"></div>
+      <div class="fw8 mt16" style="font-size:13px;margin-bottom:10px">Facturas</div>
+      <div class="doc-grid">
+        <div class="doc-card"><div class="di">🧾</div><div class="dn">Iberdrola Jun 2025</div><div class="dm">05/06/2025 · PDF</div></div>
+        <div class="doc-card"><div class="di">🧾</div><div class="dn">Alquiler Jun 2025</div><div class="dm">01/06/2025 · PDF</div></div>
+        <div class="doc-card"><div class="di">🧾</div><div class="dn">Gestoría 2T 2025</div><div class="dm">01/06/2025 · PDF</div></div>
+      </div>
+    </div>
+
+    <!-- ═══ IRPF ═══ -->
+    <div class="screen" id="screen-irpf">
+      <div class="sec-hd"><h2>Ayuda IRPF</h2><select class="flt"><option>2T 2025</option><option>1T 2025</option></select></div>
+      <div class="dash-row">
+        <div class="irpf-box">
+          <h3>📊 Resumen 2T 2025</h3>
+          <div class="irpf-row"><span class="nm">Ingresos acumulados</span><span class="vl g" id="irpfIng">—</span></div>
+          <div class="irpf-row"><span class="nm">Gastos deducibles</span><span class="vl a">3.890 €</span></div>
+          <div class="irpf-row"><span class="nm">Rendimiento neto</span><span class="vl" id="irpfNet">—</span></div>
+          <div class="irpf-row"><span class="nm">Retención est. (15%)</span><span class="vl a" id="irpfRet">—</span></div>
+          <p class="irpf-disc">⚠️ Orientativo. Consulta siempre con tu gestoría.</p>
+        </div>
+        <div class="card p16">
+          <div class="fw8" style="font-size:13.5px;margin-bottom:14px">Trimestres 2025</div>
+          <table style="width:100%">
+            <thead><tr>
+              <th style="text-align:left;padding:6px 4px;font-size:11px;color:var(--ink-m);border-bottom:1px solid var(--brd)">Trim.</th>
+              <th style="text-align:right;padding:6px 4px;font-size:11px;color:var(--ink-m);border-bottom:1px solid var(--brd)">Ingresos</th>
+              <th style="text-align:right;padding:6px 4px;font-size:11px;color:var(--ink-m);border-bottom:1px solid var(--brd)">Gastos</th>
+              <th style="text-align:right;padding:6px 4px;font-size:11px;color:var(--ink-m);border-bottom:1px solid var(--brd)">Beneficio</th>
+            </tr></thead>
+            <tbody>
+              <tr><td style="padding:9px 4px;font-size:12.5px;font-weight:700">1T</td><td style="padding:9px 4px;text-align:right;font-size:12.5px;color:var(--grn)" id="t1ing">—</td><td style="padding:9px 4px;text-align:right;font-size:12.5px;color:var(--red)">3.890€</td><td style="padding:9px 4px;text-align:right;font-size:12.5px;font-weight:700" id="t1ben">—</td></tr>
+              <tr><td style="padding:9px 4px;font-size:12.5px;font-weight:700">2T</td><td style="padding:9px 4px;text-align:right;font-size:12.5px;color:var(--grn)" id="t2ing">—</td><td style="padding:9px 4px;text-align:right;font-size:12.5px;color:var(--red)">3.890€</td><td style="padding:9px 4px;text-align:right;font-size:12.5px;font-weight:700" id="t2ben">—</td></tr>
+              <tr style="background:var(--surf)"><td style="padding:9px 4px;font-size:12.5px;font-weight:800">Total</td><td style="padding:9px 4px;text-align:right;font-size:12.5px;font-weight:800;color:var(--grn)" id="ttlIng">—</td><td style="padding:9px 4px;text-align:right;font-size:12.5px;font-weight:800;color:var(--red)">7.780€</td><td style="padding:9px 4px;text-align:right;font-size:12.5px;font-weight:800;color:var(--acc)" id="ttlBen">—</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ CONFIG ═══ -->
+    <div class="screen" id="screen-config">
+      <div class="sec-hd"><h2>Configuración</h2></div>
+      <div class="dash-row">
+        <div class="card p16">
+          <div class="fw8 mt0" style="font-size:13.5px;margin-bottom:14px">🎓 Datos de la academia</div>
+          <div class="fg">
+            <div class="fgrp full"><label class="lbl">Nombre</label><input class="inp" value="Alex Academy"></div>
+            <div class="fgrp full"><label class="lbl">Dirección</label><input class="inp" value="Cataluña 14, Catarroja, Valencia"></div>
+            <div class="fgrp"><label class="lbl">Teléfono</label><input class="inp" value=""></div>
+            <div class="fgrp"><label class="lbl">Email</label><input class="inp" value="info@alexacademy.es"></div>
+          </div>
+          <button class="btn btn-primary mt12" onclick="showToast('✅ Datos guardados')">💾 Guardar</button>
+        </div>
+        <div class="card p16">
+          <div class="fw8 mt0" style="font-size:13.5px;margin-bottom:14px">📤 Exportar datos</div>
+          <div class="flex" style="flex-direction:column;gap:8px">
+            <button class="btn btn-secondary w100" onclick="exportCSV('alumnos')">📊 Alumnos (CSV)</button>
+            <button class="btn btn-secondary w100" onclick="exportCSV('ingresos')">💰 Ingresos (CSV)</button>
+            <button class="btn btn-secondary w100" onclick="exportCSV('gastos')">📋 Gastos (CSV)</button>
+            <button class="btn btn-secondary w100" onclick="exportCSV('irpf')">🏛️ Resumen IRPF (CSV)</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</main>
+</div><!-- /app -->
+
+<!-- ═══ MODALES ═══ -->
+
+<!-- Nuevo alumno -->
+<div class="modal-overlay" id="m-alumno">
+  <div class="modal">
+    <div class="modal-hd"><h3>👤 Nuevo alumno</h3><button class="btn-x" onclick="closeM('m-alumno')">×</button></div>
+    <div class="modal-bd" style="max-height:65vh;overflow-y:auto">
+      <div class="fg">
+        <div class="fsec">Datos personales</div>
+        <div class="fgrp full"><label class="lbl">Nombre completo *</label><input class="inp" id="na-nombre" placeholder="Nombre Apellidos"></div>
+        <div class="fgrp"><label class="lbl">Fecha de nacimiento</label><input class="inp" type="date" id="na-fnac"></div>
+        <div class="fgrp"><label class="lbl">Teléfono</label><input class="inp" id="na-tel" type="tel"></div>
+        <div class="fgrp full"><label class="lbl">Dirección</label><input class="inp" id="na-dir"></div>
+        <div class="fsec">Tutor / Familia</div>
+        <div class="fgrp"><label class="lbl">Nombre tutor</label><input class="inp" id="na-tutor"></div>
+        <div class="fgrp"><label class="lbl">Email tutor</label><input class="inp" id="na-email" type="email"></div>
+        <div class="fsec">Médico</div>
+        <div class="fgrp full"><label class="lbl">Alergias / Observaciones</label><textarea class="inp" id="na-medico" placeholder="Alergias, medicación, necesidades especiales..."></textarea></div>
+        <div class="fsec">Académico</div>
+        <div class="fgrp"><label class="lbl">Grupo *</label>
+          <select class="inp" id="na-grupo">
+            <option>STARTERS · L-X 17:25</option>
+            <option>MOVERS+ · M-J 17:25</option>
+            <option>FLYERS+ · M-J 18:30</option>
+            <option>KET · L-X 18:30</option>
+            <option>KET+ · M-J 15:15</option>
+            <option>PET · L-X 15:15</option>
+            <option>PET+ · M-J 16:20</option>
+            <option>FIRST · L-X 16:20</option>
+          </select>
+        </div>
+        <div class="fgrp"><label class="lbl">Tipo de pago</label>
+          <select class="inp" id="na-tipo"><option>Mensual</option><option>Trimestral</option><option>Anual</option></select>
+        </div>
+        <div class="fgrp"><label class="lbl">Cuota (€)</label><input class="inp" type="number" id="na-cuota" placeholder="65"></div>
+        <div class="fgrp full" style="flex-direction:row;align-items:center;gap:10px;flex-wrap:wrap">
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" checked id="na-foto"> Autoriza fotografías</label>
+        </div>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-secondary" onclick="closeM('m-alumno')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveAlumno()">💾 Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Matrícula IA -->
+<div class="modal-overlay" id="m-matricula">
+  <div class="modal">
+    <div class="modal-hd"><h3>📄 Matrícula con IA</h3><button class="btn-x" onclick="closeM('m-matricula')">×</button></div>
+    <div class="modal-bd">
+      <div id="mat-s1">
+        <p style="font-size:13px;color:var(--ink-s);margin-bottom:14px">Sube el PDF o foto de la matrícula. La IA extraerá los datos automáticamente.</p>
+        <div class="upload-z" onclick="simMatricula()"><div class="ui">📤</div><p><strong>Toca para seleccionar</strong></p><small>PDF, JPG, PNG — máx. 10 MB</small></div>
+      </div>
+      <div id="mat-s2" style="display:none">
+        <div class="ai-think" id="mat-think"><div class="spin"></div>Analizando matrícula con IA…</div>
+        <div id="mat-res" style="display:none">
+          <div class="ai-res"><div class="ai-res-t">✨ Datos extraídos — revisa y corrige</div>
+          <div class="fg">
+            <div class="fgrp full"><label class="lbl">Nombre completo</label><input class="inp" value="Sofía González Martínez"></div>
+            <div class="fgrp"><label class="lbl">Fecha nacimiento</label><input class="inp" type="date" value="2016-03-22"></div>
+            <div class="fgrp"><label class="lbl">Teléfono</label><input class="inp" value="654 321 987"></div>
+            <div class="fgrp"><label class="lbl">Grupo solicitado</label><select class="inp"><option selected>FLYERS+ · M-J 18:30</option><option>STARTERS · L-X 17:25</option></select></div>
+            <div class="fgrp"><label class="lbl">Tutor</label><input class="inp" value="Carmen Martínez"></div>
+            <div class="fgrp"><label class="lbl">Email tutor</label><input class="inp" value="carmen.m@gmail.com"></div>
+          </div></div>
+          <p style="font-size:11.5px;color:var(--ink-m)">⚡ Confianza: 96%. Revisa los campos antes de guardar.</p>
+        </div>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-secondary" onclick="closeM('m-matricula')">Cancelar</button>
+      <button class="btn btn-primary" id="mat-save" style="display:none" onclick="closeM('m-matricula');showToast('✅ Alumno creado desde matrícula')">💾 Crear alumno</button>
+    </div>
+  </div>
+</div>
+
+<!-- Cobrar -->
+<div class="modal-overlay" id="m-cobrar">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-hd"><h3>💳 Registrar pago</h3><button class="btn-x" onclick="closeM('m-cobrar')">×</button></div>
+    <div class="modal-bd">
+      <div style="background:var(--surf);border-radius:8px;padding:12px;margin-bottom:14px">
+        <div class="fw8" id="cob-nom">—</div>
+        <div class="text-sm text-m" id="cob-per">—</div>
+      </div>
+      <div class="fg">
+        <div class="fgrp full"><label class="lbl">Importe (€)</label><input class="inp" type="number" id="cob-imp"></div>
+        <div class="fgrp full"><label class="lbl">Fecha de pago</label><input class="inp" type="date" id="cob-fecha"></div>
+        <div class="fgrp full"><label class="lbl">Notas</label><input class="inp" placeholder="Efectivo, bizum, transferencia..."></div>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-secondary" onclick="closeM('m-cobrar')">Cancelar</button>
+      <button class="btn btn-green" onclick="confirmPago()">✅ Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Pago manual -->
+<!-- MODAL: Registrar cobro de servicio -->
+<div class="modal-overlay" id="m-servicio">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-hd"><h3>➕ Registrar cobro</h3><button class="btn-x" onclick="closeM('m-servicio')">×</button></div>
+    <div class="modal-bd" style="max-height:70vh;overflow-y:auto">
+
+      <!-- Selector de tipo de cobro -->
+      <div style="margin-bottom:16px">
+        <label class="lbl" style="margin-bottom:8px;display:block">Tipo de cobro</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px" id="tipoCobroGrid">
+          <button class="tipo-btn active" onclick="selTipo(this,'cuota')"     data-tipo="cuota">📋 Cuota mensual</button>
+          <button class="tipo-btn"        onclick="selTipo(this,'particular')" data-tipo="particular">🎯 Clase particular</button>
+          <button class="tipo-btn"        onclick="selTipo(this,'bono')"       data-tipo="bono">🎟️ Bono 10 clases</button>
+          <button class="tipo-btn"        onclick="selTipo(this,'taller')"     data-tipo="taller">🎨 Taller Let's Play</button>
+          <button class="tipo-btn"        onclick="selTipo(this,'matricula')"  data-tipo="matricula">📝 Matrícula</button>
+          <button class="tipo-btn"        onclick="selTipo(this,'material')"   data-tipo="material">📚 Material (45€)</button>
+        </div>
+      </div>
+
+      <!-- Detalle del servicio seleccionado -->
+      <div id="detalleServicio" style="background:var(--acc-lt);border:1px solid rgba(45,122,58,.2);border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:13px;color:var(--acc-d)"></div>
+
+      <div class="fg">
+        <div class="fgrp full">
+          <label class="lbl">Alumno</label>
+          <select class="inp" id="srv-alumno" onchange="autoImporte()"></select>
+        </div>
+
+        <!-- Opciones dinámicas según tipo -->
+        <div id="srv-opts-particular" class="fgrp full" style="display:none">
+          <label class="lbl">Nivel del alumno</label>
+          <select class="inp" id="srv-nivel-part" onchange="autoImporte()">
+            <option value="21">A1-A2 — 21€/clase</option>
+            <option value="26">B1-B2 — 26€/clase</option>
+            <option value="30">C1-C2 — 30€/clase</option>
+          </select>
+        </div>
+        <div id="srv-opts-bono" class="fgrp full" style="display:none">
+          <label class="lbl">Nivel (bono 10 clases)</label>
+          <select class="inp" id="srv-nivel-bono" onchange="autoImporte()">
+            <option value="190">A1-A2 — Bono 190€</option>
+            <option value="240">B1-B2 — Bono 240€</option>
+            <option value="280">C1-C2 — Bono 280€</option>
+          </select>
+        </div>
+        <div id="srv-opts-taller" class="fgrp full" style="display:none">
+          <label class="lbl">Taller</label>
+          <select class="inp" id="srv-taller-sel" onchange="autoImporte()">
+            <option value="10">Let's Cook — 10€</option>
+            <option value="10">Let's Play — 10€</option>
+            <option value="10">Let's Act — 10€</option>
+            <option value="10">Let's DIY — 10€</option>
+          </select>
+        </div>
+
+        <div class="fgrp">
+          <label class="lbl">Importe (€)</label>
+          <input class="inp" type="number" id="srv-importe" placeholder="0.00">
+        </div>
+        <div class="fgrp">
+          <label class="lbl">Fecha</label>
+          <input class="inp" type="date" id="srv-fecha">
+        </div>
+        <div class="fgrp full">
+          <label class="lbl">Forma de pago</label>
+          <select class="inp" id="srv-fpago">
+            <option>Efectivo</option>
+            <option>Bizum</option>
+            <option>Transferencia</option>
+            <option>Domiciliación bancaria</option>
+          </select>
+        </div>
+        <div class="fgrp full">
+          <label class="lbl">Notas (opcional)</label>
+          <input class="inp" id="srv-notas" placeholder="Observaciones...">
+        </div>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-secondary" onclick="closeM('m-servicio')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarServicio()">💾 Guardar cobro</button>
+    </div>
+  </div>
+</div>
+
+<!-- Gasto -->
+<div class="modal-overlay" id="m-gasto">
+  <div class="modal">
+    <div class="modal-hd"><h3>📋 Nuevo gasto</h3><button class="btn-x" onclick="closeM('m-gasto')">×</button></div>
+    <div class="modal-bd">
+      <div class="fg">
+        <div class="fgrp"><label class="lbl">Proveedor *</label><input class="inp" placeholder="Iberdrola S.A."></div>
+        <div class="fgrp"><label class="lbl">CIF/NIF</label><input class="inp" placeholder="A12345678"></div>
+        <div class="fgrp"><label class="lbl">Categoría</label>
+          <select class="inp"><option>Alquiler</option><option>Luz</option><option>Agua</option><option>Internet</option><option>Autónomos</option><option>Gestoría</option><option>Material</option><option>Publicidad</option><option>Limpieza</option><option>Seguros</option><option>Otros</option></select>
+        </div>
+        <div class="fgrp"><label class="lbl">Fecha</label><input class="inp" type="date"></div>
+        <div class="fgrp"><label class="lbl">Base imponible (€)</label><input class="inp" type="number" id="g-base" oninput="calcIVA()"></div>
+        <div class="fgrp"><label class="lbl">IVA (%)</label><select class="inp" id="g-ivap" onchange="calcIVA()"><option value="21">21%</option><option value="10">10%</option><option value="0">0%</option></select></div>
+        <div class="fgrp"><label class="lbl">IVA (€)</label><input class="inp" type="number" id="g-ivae" readonly style="background:var(--surf)"></div>
+        <div class="fgrp"><label class="lbl">Total (€)</label><input class="inp" type="number" id="g-total" readonly style="background:var(--surf)"></div>
+        <div class="fgrp"><label class="lbl">Estado</label><select class="inp"><option>Pagado</option><option>Pendiente</option></select></div>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-secondary" onclick="closeM('m-gasto')">Cancelar</button>
+      <button class="btn btn-primary" onclick="closeM('m-gasto');showToast('✅ Gasto registrado')">💾 Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Factura IA -->
+<div class="modal-overlay" id="m-factura">
+  <div class="modal">
+    <div class="modal-hd"><h3>🧾 Factura con IA</h3><button class="btn-x" onclick="closeM('m-factura')">×</button></div>
+    <div class="modal-bd">
+      <div id="fac-s1">
+        <p style="font-size:13px;color:var(--ink-s);margin-bottom:14px">Sube la foto o PDF de la factura.</p>
+        <div class="upload-z" onclick="simFactura()"><div class="ui">📤</div><p><strong>Toca para seleccionar</strong></p><small>PDF, JPG, PNG</small></div>
+      </div>
+      <div id="fac-s2" style="display:none">
+        <div class="ai-think" id="fac-think"><div class="spin"></div>Analizando factura…</div>
+        <div id="fac-res" style="display:none">
+          <div class="ai-res"><div class="ai-res-t">✨ Datos extraídos — revisa y corrige</div>
+          <div class="fg">
+            <div class="fgrp"><label class="lbl">Empresa</label><input class="inp" value="Iberdrola Clientes S.A.U."></div>
+            <div class="fgrp"><label class="lbl">CIF</label><input class="inp" value="A95075578"></div>
+            <div class="fgrp"><label class="lbl">Fecha</label><input class="inp" type="date" value="2025-06-05"></div>
+            <div class="fgrp"><label class="lbl">Categoría</label><select class="inp"><option selected>Luz</option><option>Agua</option></select></div>
+            <div class="fgrp"><label class="lbl">Base</label><input class="inp" type="number" value="118.50"></div>
+            <div class="fgrp"><label class="lbl">IVA</label><input class="inp" type="number" value="24.89"></div>
+            <div class="fgrp full"><label class="lbl">Total</label><input class="inp" type="number" value="143.39"></div>
+          </div></div>
+          <p style="font-size:11px;color:var(--ink-m)">⚡ Confianza: 97%</p>
+        </div>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-secondary" onclick="closeM('m-factura')">Cancelar</button>
+      <button class="btn btn-primary" id="fac-save" style="display:none" onclick="closeM('m-factura');showToast('✅ Gasto guardado')">💾 Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Grupo -->
+<div class="modal-overlay" id="m-grupo">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-hd"><h3>👥 Nuevo grupo</h3><button class="btn-x" onclick="closeM('m-grupo')">×</button></div>
+    <div class="modal-bd">
+      <div class="fg">
+        <div class="fgrp full"><label class="lbl">Nombre *</label><input class="inp" id="grp-nom" placeholder="PET · L-X 15:15"></div>
+        <div class="fgrp"><label class="lbl">Nivel</label><input class="inp" id="grp-niv" placeholder="B1"></div>
+        <div class="fgrp"><label class="lbl">Horario</label><input class="inp" id="grp-hor" placeholder="L-X 15:15-16:15"></div>
+        <div class="fgrp"><label class="lbl">Máx. alumnos</label><input class="inp" type="number" value="8"></div>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-secondary" onclick="closeM('m-grupo')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveGrupo()">💾 Crear</button>
+    </div>
+  </div>
+</div>
+
+<!-- Baja -->
+<div class="modal-overlay" id="m-baja">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-hd"><h3>⚠️ Dar de baja</h3><button class="btn-x" onclick="closeM('m-baja')">×</button></div>
+    <div class="modal-bd">
+      <p style="font-size:13px;color:var(--ink-s)">¿Confirmas dar de baja a este alumno? El historial se conservará.</p>
+      <div class="fgrp mt12"><label class="lbl">Motivo (opcional)</label><textarea class="inp" placeholder="Traslado, fin de curso..."></textarea></div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-secondary" onclick="closeM('m-baja')">Cancelar</button>
+      <button class="btn btn-red" onclick="confirmBaja()">Dar de baja</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const ALUMNOS_DATA = 
+[
+  {
+    "id": 1,
+    "nombre": "Valeria Martinez Puchalt",
+    "nacimiento": "dic 16, 2020",
+    "tel": "652303241",
+    "grupo": "STARTERS · L-X 17:25",
+    "nivel": "STARTERS",
+    "estado": "Activo",
+    "cuota": 180,
+    "tipo": "Trimestral",
+    "pagado": true,
+    "tutorNombre": "Martinez Benlloch Alejandro",
+    "tutorEmail": "soniapuchalt2@hotmail.es",
+    "parentesco": "Padre",
+    "medico": "",
+    "fotoAuth": false
+  },
+  {
+    "id": 2,
+    "nombre": "Claudia Martinez Puchalt",
+    "nacimiento": "may 2, 2014",
+    "tel": "652303241",
+    "grupo": "KET · L-X 18:30",
+    "nivel": "KET",
+    "estado": "Activo",
+    "cuota": 180,
+    "tipo": "Trimestral",
+    "pagado": false,
+    "tutorNombre": "Martinez Benlloch Alejandro",
+    "tutorEmail": "soniapuchalt2@hotmail.es",
+    "parentesco": "Padre",
+    "medico": "",
+    "fotoAuth": true
+  },
+  {
+    "id": 3,
+    "nombre": "Paula valentina Ramirez",
+    "nacimiento": "feb 1, 2011",
+    "tel": "664684314",
+    "grupo": "PET+ · M-J 16:20",
+    "nivel": "PET+",
+    "estado": "Activo",
+    "cuota": 65,
+    "tipo": "Mensual",
+    "pagado": true,
+    "tutorNombre": "Eliana Patricia Maestre Gutiérrez",
+    "tutorEmail": "elianamaestre17@hotmail.com",
+    "parentesco": "Madre",
+    "medico": "",
+    "fotoAuth": true
+  },
+  {
+    "id": 4,
+    "nombre": "Hugo Sisternes",
+    "nacimiento": "jul 15, 2020",
+    "tel": "676189569",
+    "grupo": "STARTERS · L-X 17:25",
+    "nivel": "STARTERS",
+    "estado": "Activo",
+    "cuota": 180,
+    "tipo": "Trimestral",
+    "pagado": false,
+    "tutorNombre": "Lorena Vizuete",
+    "tutorEmail": "lorena.vizuete@hotmail.com",
+    "parentesco": "Madre",
+    "medico": "",
+    "fotoAuth": false
+  },
+  {
+    "id": 5,
+    "nombre": "Ferran Alonso Fernández",
+    "nacimiento": "dic 3, 2015",
+    "tel": "669443825",
+    "grupo": "FLYERS+ · M-J 18:30",
+    "nivel": "FLYERS+",
+    "estado": "Activo",
+    "cuota": 180,
+    "tipo": "Trimestral",
+    "pagado": true,
+    "tutorNombre": "Verónica Fernández",
+    "tutorEmail": "veferba@hotmail.com",
+    "parentesco": "Madre",
+    "medico": "",
+    "fotoAuth": true
+  },
+  {
+    "id": 6,
+    "nombre": "Martina Alonso Fernandez",
+    "nacimiento": "jun 2, 2011",
+    "tel": "669443825",
+    "grupo": "FIRST · L-X 16:20",
+    "nivel": "FIRST",
+    "estado": "Activo",
+    "cuota": 180,
+    "tipo": "Trimestral",
+    "pagado": false,
+    "tutorNombre": "Veronica Fernández Balaguer",
+    "tutorEmail": "veferba@hotmail.com",
+    "parentesco": "Madre",
+    "medico": "",
+    "fotoAuth": false
+  },
+  {
+    "id": 7,
+    "nombre": "Triana Carmona Castelló",
+    "nacimiento": "oct 14, 2015",
+    "tel": "673053199",
+    "grupo": "FLYERS+ · M-J 18:30",
+    "nivel": "FLYERS+",
+    "estado": "Activo",
+    "cuota": 65,
+    "tipo": "Mensual",
+    "pagado": true,
+    "tutorNombre": "Andrea Castelló Tejero",
+    "tutorEmail": "andreact.pmu@gmail.com",
+    "parentesco": "Madre",
+    "medico": "",
+    "fotoAuth": true
+  },
+  {
+    "id": 8,
+    "nombre": "Neizan Carmona Castelló",
+    "nacimiento": "may 6, 2014",
+    "tel": "673053199",
+    "grupo": "KET+ · M-J 15:15",
+    "nivel": "KET+",
+    "estado": "Activo",
+    "cuota": 65,
+    "tipo": "Mensual",
+    "pagado": true,
+    "tutorNombre": "Andrea Castelló Tejero",
+    "tutorEmail": "andreact.pmu@gmail.com",
+    "parentesco": "Madre",
+    "medico": "Diagnóstico TEA",
+    "fotoAuth": true
+  },
+  {
+    "id": 9,
+    "nombre": "Valeria Muñoz Ortí",
+    "nacimiento": "dic 18, 2013",
+    "tel": "637460657",
+    "grupo": "PET · L-X 15:15",
+    "nivel": "PET",
+    "estado": "Activo",
+    "cuota": 180,
+    "tipo": "Trimestral",
+    "pagado": true,
+    "tutorNombre": "Sonia Ortí Espinosa",
+    "tutorEmail": "info@comercialquimbaya.com",
+    "parentesco": "Madre",
+    "medico": "NINGUNA - ALERGICA AMOXICILINA",
+    "fotoAuth": true
+  },
+  {
+    "id": 10,
+    "nombre": "Lucia Galvez Moreira",
+    "nacimiento": "oct 12, 2012",
+    "tel": "625517475",
+    "grupo": "PET · L-X 15:15",
+    "nivel": "PET",
+    "estado": "Activo",
+    "cuota": 180,
+    "tipo": "Trimestral",
+    "pagado": false,
+    "tutorNombre": "Antonio Galvez Perez Galvez Perez",
+    "tutorEmail": "antoniogplucia@gmail.com",
+    "parentesco": "Padre",
+    "medico": "Nueces y kiwi",
+    "fotoAuth": true
+  },
+  {
+    "id": 11,
+    "nombre": "Olivia Gomez",
+    "nacimiento": "ene 18, 2013",
+    "tel": "677069894",
+    "grupo": "PET+ · M-J 16:20",
+    "nivel": "PET+",
+    "estado": "Activo",
+    "cuota": 65,
+    "tipo": "Mensual",
+    "pagado": false,
+    "tutorNombre": "Rocio Hortelano Salas",
+    "tutorEmail": "rocio.hortelano@hotmail.com",
+    "parentesco": "Madre",
+    "medico": "Trasplantada bipulmonar",
+    "fotoAuth": true
+  },
+  {
+    "id": 12,
+    "nombre": "Lucia Juan Laserna",
+    "nacimiento": "jun 27, 2015",
+    "tel": "653122358",
+    "grupo": "FLYERS+ · M-J 18:30",
+    "nivel": "FLYERS+",
+    "estado": "Activo",
+    "cuota": 65,
+    "tipo": "Mensual",
+    "pagado": true,
+    "tutorNombre": "Cristina Laserna Sanchez",
+    "tutorEmail": "cristinalasernasanchez@gmail.com",
+    "parentesco": "Madre",
+    "medico": "",
+    "fotoAuth": true
+  },
+  {
+    "id": 13,
+    "nombre": "Hugo Sanz Naya",
+    "nacimiento": "sept 23, 2011",
+    "tel": "696717784",
+    "grupo": "FIRST · L-X 16:20",
+    "nivel": "FIRST",
+    "estado": "Activo",
+    "cuota": 180,
+    "tipo": "Trimestral",
+    "pagado": true,
+    "tutorNombre": "Martín Sanz Sabater",
+    "tutorEmail": "marsansa@yahoo.com",
+    "parentesco": "Padre",
+    "medico": "",
+    "fotoAuth": true
+  },
+  {
+    "id": 14,
+    "nombre": "Giulia Carbonell Chulvi",
+    "nacimiento": "may 20, 2017",
+    "tel": "620020518",
+    "grupo": "MOVERS+ · M-J 17:25",
+    "nivel": "MOVERS+",
+    "estado": "Activo",
+    "cuota": 65,
+    "tipo": "Mensual",
+    "pagado": false,
+    "tutorNombre": "Amparo Chulvi Albiach",
+    "tutorEmail": "chulvi18@gmail.com",
+    "parentesco": "Madre",
+    "medico": "",
+    "fotoAuth": true
+  },
+  {
+    "id": 15,
+    "nombre": "Amaia Rocatagliata",
+    "nacimiento": "nov 7, 2014",
+    "tel": "654834352",
+    "grupo": "KET · L-X 18:30",
+    "nivel": "KET",
+    "estado": "Activo",
+    "cuota": 180,
+    "tipo": "Trimestral",
+    "pagado": false,
+    "tutorNombre": "Noelia Del Coso",
+    "tutorEmail": "noeliadelcoso@hotmail.com",
+    "parentesco": "Madre",
+    "medico": "",
+    "fotoAuth": true
+  },
+  {
+    "id": 16,
+    "nombre": "Jorge Rocatagliata",
+    "nacimiento": "ago 9, 2018",
+    "tel": "654834352",
+    "grupo": "MOVERS+ · M-J 17:25",
+    "nivel": "MOVERS+",
+    "estado": "Activo",
+    "cuota": 180,
+    "tipo": "Trimestral",
+    "pagado": true,
+    "tutorNombre": "Noelia Del Coso",
+    "tutorEmail": "noeliadelcoso@hotmail.com",
+    "parentesco": "Madre",
+    "medico": "",
+    "fotoAuth": true
+  },
+  {
+    "id": 17,
+    "nombre": "Sheila Martínez Forés",
+    "nacimiento": "mar 29, 2011",
+    "tel": "665952326",
+    "grupo": "PET+ · M-J 16:20",
+    "nivel": "PET+",
+    "estado": "Activo",
+    "cuota": 180,
+    "tipo": "Trimestral",
+    "pagado": false,
+    "tutorNombre": "Eva María Forés Centelles",
+    "tutorEmail": "emforescen@gmail.com",
+    "parentesco": "Madre",
+    "medico": "",
+    "fotoAuth": true
+  },
+  {
+    "id": 18,
+    "nombre": "Eloy Martínez Forés",
+    "nacimiento": "abr 7, 2009",
+    "tel": "665952326",
+    "grupo": "PET+ · M-J 16:20",
+    "nivel": "PET+",
+    "estado": "Activo",
+    "cuota": 180,
+    "tipo": "Trimestral",
+    "pagado": false,
+    "tutorNombre": "Eva María Forés Centelles",
+    "tutorEmail": "emforescen@gmail.com",
+    "parentesco": "Madre",
+    "medico": "",
+    "fotoAuth": true
+  },
+  {
+    "id": 19,
+    "nombre": "Abril Nogues Vizuete",
+    "nacimiento": "nov 10, 2016",
+    "tel": "676778806",
+    "grupo": "PET+ · M-J 16:20",
+    "nivel": "PET+",
+    "estado": "Activo",
+    "cuota": 180,
+    "tipo": "Trimestral",
+    "pagado": true,
+    "tutorNombre": "Sandra Vizuete Calvo",
+    "tutorEmail": "sandra.vizuete@hotmail.com",
+    "parentesco": "Madre",
+    "medico": "",
+    "fotoAuth": true
+  },
+  {
+    "id": 20,
+    "nombre": "Adriana Nogues Vizuete",
+    "nacimiento": "jul 4, 2012",
+    "tel": "676778806",
+    "grupo": "PET · L-X 15:15",
+    "nivel": "PET",
+    "estado": "Activo",
+    "cuota": 180,
+    "tipo": "Trimestral",
+    "pagado": true,
+    "tutorNombre": "Sandra Vizuete Calvo",
+    "tutorEmail": "sandra.vizuete@hotmail.com",
+    "parentesco": "Madre",
+    "medico": "CELIACA",
+    "fotoAuth": true
+  },
+  {
+    "id": 21,
+    "nombre": "Nora Del Campo Muñoz",
+    "nacimiento": "ago 13, 2013",
+    "tel": "666067761",
+    "grupo": "PET · L-X 15:15",
+    "nivel": "PET",
+    "estado": "Activo",
+    "cuota": 65,
+    "tipo": "Mensual",
+    "pagado": true,
+    "tutorNombre": "Almudena Muñoz Fuertes",
+    "tutorEmail": "almu_mf@hotmail.com",
+    "parentesco": "Madre",
+    "medico": "",
+    "fotoAuth": true
+  },
+  {
+    "id": 22,
+    "nombre": "Mateo agustín Fernandez Paz",
+    "nacimiento": "nov 4, 2011",
+    "tel": "611630589",
+    "grupo": "FIRST · L-X 16:20",
+    "nivel": "FIRST",
+    "estado": "Activo",
+    "cuota": 180,
+    "tipo": "Trimestral",
+    "pagado": true,
+    "tutorNombre": "Miriam Alejandra Paz",
+    "tutorEmail": "miriam.a.paz.83@gmail.com",
+    "parentesco": "Madre",
+    "medico": "",
+    "fotoAuth": true
+  },
+  {
+    "id": 23,
+    "nombre": "Mireia Moreno Morellá",
+    "nacimiento": "nov 5, 2010",
+    "tel": "649444054",
+    "grupo": "FIRST · L-X 16:20",
+    "nivel": "FIRST",
+    "estado": "Activo",
+    "cuota": 180,
+    "tipo": "Trimestral",
+    "pagado": true,
+    "tutorNombre": "Verónica Morellá",
+    "tutorEmail": "veromorella@gmail.com",
+    "parentesco": "Madre",
+    "medico": "",
+    "fotoAuth": true
+  },
+  {
+    "id": 24,
+    "nombre": "Irene Moreno Morellá",
+    "nacimiento": "oct 26, 2013",
+    "tel": "649444054",
+    "grupo": "KET+ · M-J 15:15",
+    "nivel": "KET+",
+    "estado": "Activo",
+    "cuota": 180,
+    "tipo": "Trimestral",
+    "pagado": false,
+    "tutorNombre": "Verónica Morellá",
+    "tutorEmail": "veromorella@gmail.com",
+    "parentesco": "Madre",
+    "medico": "",
+    "fotoAuth": true
+  },
+  {
+    "id": 25,
+    "nombre": "Valeria Crespo Perez",
+    "nacimiento": "mar 25, 2018",
+    "tel": "648423943",
+    "grupo": "MOVERS+ · M-J 17:25",
+    "nivel": "MOVERS+",
+    "estado": "Activo",
+    "cuota": 180,
+    "tipo": "Trimestral",
+    "pagado": true,
+    "tutorNombre": "Pérez Chamorro Isabel",
+    "tutorEmail": "ysa.pch@gmail.com",
+    "parentesco": "Madre",
+    "medico": "",
+    "fotoAuth": true
+  },
+  {
+    "id": 26,
+    "nombre": "Leo Crespo Perez",
+    "nacimiento": "may 21, 2015",
+    "tel": "648423943",
+    "grupo": "FLYERS+ · M-J 18:30",
+    "nivel": "FLYERS+",
+    "estado": "Activo",
+    "cuota": 180,
+    "tipo": "Trimestral",
+    "pagado": false,
+    "tutorNombre": "Pérez Chamorro Isabel",
+    "tutorEmail": "ysa.pch@gmail.com",
+    "parentesco": "Madre",
+    "medico": "",
+    "fotoAuth": true
+  },
+  {
+    "id": 27,
+    "nombre": "Martina Jiménez Ribes",
+    "nacimiento": "mar 17, 2015",
+    "tel": "617249743",
+    "grupo": "FLYERS+ · M-J 18:30",
+    "nivel": "FLYERS+",
+    "estado": "Activo",
+    "cuota": 65,
+    "tipo": "Mensual",
+    "pagado": true,
+    "tutorNombre": "Ana Ribes Jorge",
+    "tutorEmail": "anaribes92@hotmail.com",
+    "parentesco": "Madre",
+    "medico": "Epilepsia de ausencias",
+    "fotoAuth": true
+  },
+  {
+    "id": 28,
+    "nombre": "Melissa Pérez López",
+    "nacimiento": "jul 22, 2011",
+    "tel": "670246641",
+    "grupo": "PET+ · M-J 16:20",
+    "nivel": "PET+",
+    "estado": "Activo",
+    "cuota": 65,
+    "tipo": "Mensual",
+    "pagado": true,
+    "tutorNombre": "Melissa López Sobrino",
+    "tutorEmail": "administracion@aperezproyectista.com",
+    "parentesco": "Madre",
+    "medico": "",
+    "fotoAuth": true
+  },
+  {
+    "id": 29,
+    "nombre": "Lucia Cebrian Carrascosa",
+    "nacimiento": "dic 18, 2012",
+    "tel": "676284952",
+    "grupo": "PET · L-X 15:15",
+    "nivel": "PET",
+    "estado": "Activo",
+    "cuota": 65,
+    "tipo": "Mensual",
+    "pagado": true,
+    "tutorNombre": "Carrascosa Asins Mayte",
+    "tutorEmail": "maitechuca15@gmail.com",
+    "parentesco": "Madre",
+    "medico": "",
+    "fotoAuth": true
+  },
+  {
+    "id": 30,
+    "nombre": "Alma Madrigal Serrano",
+    "nacimiento": "oct 18, 2018",
+    "tel": "625166999",
+    "grupo": "MOVERS+ · M-J 17:25",
+    "nivel": "MOVERS+",
+    "estado": "Activo",
+    "cuota": 180,
+    "tipo": "Trimestral",
+    "pagado": false,
+    "tutorNombre": "Serrano Monedero Rosa",
+    "tutorEmail": "rositaserrano81@gmail.com",
+    "parentesco": "Madre",
+    "medico": "",
+    "fotoAuth": true
+  },
+  {
+    "id": 31,
+    "nombre": "Martina Madrigal Serrano",
+    "nacimiento": "dic 18, 2014",
+    "tel": "625166999",
+    "grupo": "KET · L-X 18:30",
+    "nivel": "KET",
+    "estado": "Activo",
+    "cuota": 180,
+    "tipo": "Trimestral",
+    "pagado": true,
+    "tutorNombre": "Serrano Monedero Rosa",
+    "tutorEmail": "rositaserrano81@gmail.com",
+    "parentesco": "Madre",
+    "medico": "",
+    "fotoAuth": true
+  },
+  {
+    "id": 32,
+    "nombre": "Lucia García Salvador",
+    "nacimiento": "dic 18, 2014",
+    "tel": "661572967",
+    "grupo": "KET · L-X 18:30",
+    "nivel": "KET",
+    "estado": "Activo",
+    "cuota": 522,
+    "tipo": "Anual",
+    "pagado": true,
+    "tutorNombre": "Salvador Sánchez Jessica",
+    "tutorEmail": "jessysalvador32@gmail.com",
+    "parentesco": "Madre",
+    "medico": "Coco",
+    "fotoAuth": true
+  },
+  {
+    "id": 33,
+    "nombre": "David Subias Viñas",
+    "nacimiento": "ago 31, 2017",
+    "tel": "635427850",
+    "grupo": "FLYERS+ · M-J 18:30",
+    "nivel": "FLYERS+",
+    "estado": "Activo",
+    "cuota": 180,
+    "tipo": "Trimestral",
+    "pagado": true,
+    "tutorNombre": "Viñas Aragón Luisa",
+    "tutorEmail": "luisava900@gmail.com",
+    "parentesco": "Madre",
+    "medico": "",
+    "fotoAuth": true
+  },
+  {
+    "id": 34,
+    "nombre": "Lope Ribes Cócera",
+    "nacimiento": "nov 2, 2018",
+    "tel": "635515787",
+    "grupo": "STARTERS · L-X 17:25",
+    "nivel": "STARTERS",
+    "estado": "Activo",
+    "cuota": 65,
+    "tipo": "Mensual",
+    "pagado": true,
+    "tutorNombre": "Rebeca Cócera González",
+    "tutorEmail": "guas82@gmail.com",
+    "parentesco": "Madre",
+    "medico": "",
+    "fotoAuth": true
+  },
+  {
+    "id": 35,
+    "nombre": "Nerea Valiente Carretero",
+    "nacimiento": "jun 14, 2014",
+    "tel": "659714294",
+    "grupo": "KET+ · M-J 15:15",
+    "nivel": "KET+",
+    "estado": "Activo",
+    "cuota": 180,
+    "tipo": "Trimestral",
+    "pagado": true,
+    "tutorNombre": "Laura Carretero Raga",
+    "tutorEmail": "laucara3@hotmail.com",
+    "parentesco": "Madre",
+    "medico": "",
+    "fotoAuth": true
+  },
+  {
+    "id": 36,
+    "nombre": "Aitana Valiente Carretero",
+    "nacimiento": "jun 14, 2014",
+    "tel": "659714294",
+    "grupo": "KET+ · M-J 15:15",
+    "nivel": "KET+",
+    "estado": "Activo",
+    "cuota": 180,
+    "tipo": "Trimestral",
+    "pagado": true,
+    "tutorNombre": "Laura Carretero Raga",
+    "tutorEmail": "laucara3@hotmail.com",
+    "parentesco": "Madre",
+    "medico": "",
+    "fotoAuth": true
+  },
+  {
+    "id": 37,
+    "nombre": "Carlota De Dios",
+    "nacimiento": "mar 13, 2020",
+    "tel": "647522875",
+    "grupo": "STARTERS · L-X 17:25",
+    "nivel": "STARTERS",
+    "estado": "Activo",
+    "cuota": 180,
+    "tipo": "Trimestral",
+    "pagado": false,
+    "tutorNombre": "Lucas Fortea Carmen",
+    "tutorEmail": "clucasfortea29@gmail.com",
+    "parentesco": "Madre",
+    "medico": "",
+    "fotoAuth": true
+  },
+  {
+    "id": 38,
+    "nombre": "Alexia De Dios",
+    "nacimiento": "may 5, 2015",
+    "tel": "647522875",
+    "grupo": "KET · L-X 18:30",
+    "nivel": "KET",
+    "estado": "Activo",
+    "cuota": 180,
+    "tipo": "Trimestral",
+    "pagado": true,
+    "tutorNombre": "Lucas Fortea Carmen",
+    "tutorEmail": "clucasfortea29@gmail.com",
+    "parentesco": "Madre",
+    "medico": "",
+    "fotoAuth": true
+  },
+  {
+    "id": 39,
+    "nombre": "Leo Mazcuñan Navarro",
+    "nacimiento": "may 27, 2020",
+    "tel": "646725487",
+    "grupo": "STARTERS · L-X 17:25",
+    "nivel": "STARTERS",
+    "estado": "Activo",
+    "cuota": 180,
+    "tipo": "Trimestral",
+    "pagado": true,
+    "tutorNombre": "Belen Navarro Tamarit",
+    "tutorEmail": "belennavarrotamarit.1987@gmail.com",
+    "parentesco": "Madre",
+    "medico": "",
+    "fotoAuth": true
+  },
+  {
+    "id": 40,
+    "nombre": "Lucas Bou Sánchez",
+    "nacimiento": "jul 28, 2020",
+    "tel": "651999881",
+    "grupo": "STARTERS · L-X 17:25",
+    "nivel": "STARTERS",
+    "estado": "Activo",
+    "cuota": 180,
+    "tipo": "Trimestral",
+    "pagado": true,
+    "tutorNombre": "Pedro José Bou Alfonso",
+    "tutorEmail": "pedrojbou@gmail.com",
+    "parentesco": "Padre",
+    "medico": "",
+    "fotoAuth": true
+  },
+  {
+    "id": 41,
+    "nombre": "Marc Varea Garcia",
+    "nacimiento": "may 24, 2018",
+    "tel": "666713271",
+    "grupo": "MOVERS+ · M-J 17:25",
+    "nivel": "MOVERS+",
+    "estado": "Activo",
+    "cuota": 180,
+    "tipo": "Trimestral",
+    "pagado": true,
+    "tutorNombre": "Sheila García Sebastia",
+    "tutorEmail": "shgarse@gmail.com",
+    "parentesco": "Madre",
+    "medico": "Alérgico al polen, olivo, pelo de animales",
+    "fotoAuth": false
+  },
+  {
+    "id": 42,
+    "nombre": "Felicidad Lozano Ballesteros",
+    "nacimiento": "jul 11, 2014",
+    "tel": "651933264",
+    "grupo": "KET · L-X 18:30",
+    "nivel": "KET",
+    "estado": "Activo",
+    "cuota": 180,
+    "tipo": "Trimestral",
+    "pagado": true,
+    "tutorNombre": "Lozano Ballesteros Felicidad",
+    "tutorEmail": "lozano.felicidad@gmail.com",
+    "parentesco": "Madre",
+    "medico": "",
+    "fotoAuth": true
+  },
+  {
+    "id": 43,
+    "nombre": "Olivia Romero",
+    "nacimiento": "oct 4, 2016",
+    "tel": "665429079",
+    "grupo": "FLYERS+ · M-J 18:30",
+    "nivel": "FLYERS+",
+    "estado": "Activo",
+    "cuota": 65,
+    "tipo": "Mensual",
+    "pagado": false,
+    "tutorNombre": "Nati Romero Sanchez",
+    "tutorEmail": "narosa2015@hotmail.com",
+    "parentesco": "Madre",
+    "medico": "",
+    "fotoAuth": true
+  },
+  {
+    "id": 44,
+    "nombre": "Alba isabel Aceitón Sobrino",
+    "nacimiento": "oct 3, 2013",
+    "tel": "626775286",
+    "grupo": "PET · L-X 15:15",
+    "nivel": "PET",
+    "estado": "Activo",
+    "cuota": 180,
+    "tipo": "Trimestral",
+    "pagado": true,
+    "tutorNombre": "Sobrino Morujo Marta",
+    "tutorEmail": "martasobrinomorujo@gmail.com",
+    "parentesco": "Madre",
+    "medico": "",
+    "fotoAuth": true
+  },
+  {
+    "id": 45,
+    "nombre": "Victòria Tamarit I Gradolí",
+    "nacimiento": "oct 17, 2011",
+    "tel": "651157487",
+    "grupo": "FIRST · L-X 16:20",
+    "nivel": "FIRST",
+    "estado": "Activo",
+    "cuota": 180,
+    "tipo": "Trimestral",
+    "pagado": true,
+    "tutorNombre": "Victoria Gradolí Romeu",
+    "tutorEmail": "victoria.gradoli@gmail.com",
+    "parentesco": "Madre",
+    "medico": "",
+    "fotoAuth": true
+  },
+  {
+    "id": 46,
+    "nombre": "Clara Monzó",
+    "nacimiento": "dic 16, 2011",
+    "tel": "651616474",
+    "grupo": "PET · L-X 15:15",
+    "nivel": "PET",
+    "estado": "Activo",
+    "cuota": 180,
+    "tipo": "Trimestral",
+    "pagado": true,
+    "tutorNombre": "Cristina Bou García",
+    "tutorEmail": "cristina.bou.garcia@gmail.com",
+    "parentesco": "Madre",
+    "medico": "",
+    "fotoAuth": true
+  },
+  {
+    "id": 47,
+    "nombre": "Maria Lozano Rubio",
+    "nacimiento": "nov 1, 2012",
+    "tel": "620485768",
+    "grupo": "FIRST · L-X 16:20",
+    "nivel": "FIRST",
+    "estado": "Activo",
+    "cuota": 522,
+    "tipo": "Anual",
+    "pagado": true,
+    "tutorNombre": "Rubio Rodríguez Laura",
+    "tutorEmail": "claudilr08@hotmail.com",
+    "parentesco": "Madre",
+    "medico": "Asma",
+    "fotoAuth": true
+  },
+  {
+    "id": 48,
+    "nombre": "Gonzalo Martín",
+    "nacimiento": "feb 21, 2012",
+    "tel": "619520487",
+    "grupo": "FIRST · L-X 16:20",
+    "nivel": "FIRST",
+    "estado": "Activo",
+    "cuota": 180,
+    "tipo": "Trimestral",
+    "pagado": true,
+    "tutorNombre": "María Teresa Boluda Iñíguez",
+    "tutorEmail": "mtboluda@gmail.com",
+    "parentesco": "Madre",
+    "medico": "Alergia contacto fieltro",
+    "fotoAuth": true
+  },
+  {
+    "id": 49,
+    "nombre": "Adriana Marco Bolinches",
+    "nacimiento": "sept 5, 2013",
+    "tel": "652931312",
+    "grupo": "PET · L-X 15:15",
+    "nivel": "PET",
+    "estado": "Activo",
+    "cuota": 180,
+    "tipo": "Trimestral",
+    "pagado": false,
+    "tutorNombre": "José Salvador Marco Ramón",
+    "tutorEmail": "samarco30@gmail.com",
+    "parentesco": "Padre",
+    "medico": "",
+    "fotoAuth": true
+  },
+  {
+    "id": 50,
+    "nombre": "Aina Tordera Selma",
+    "nacimiento": "jun 16, 2014",
+    "tel": "667343883",
+    "grupo": "KET+ · M-J 15:15",
+    "nivel": "KET+",
+    "estado": "Activo",
+    "cuota": 180,
+    "tipo": "Trimestral",
+    "pagado": true,
+    "tutorNombre": "Carolina Selma Olmos",
+    "tutorEmail": "carolinaselmaolmos@gmail.com",
+    "parentesco": "Madre",
+    "medico": "",
+    "fotoAuth": true
+  },
+  {
+    "id": 51,
+    "nombre": "Daniela Marco Bolinches",
+    "nacimiento": "may 11, 2017",
+    "tel": "652931312",
+    "grupo": "MOVERS+ · M-J 17:25",
+    "nivel": "MOVERS+",
+    "estado": "Activo",
+    "cuota": 180,
+    "tipo": "Trimestral",
+    "pagado": true,
+    "tutorNombre": "José Salvador Marco Ramon",
+    "tutorEmail": "samarco30@gmail.com",
+    "parentesco": "Padre",
+    "medico": "",
+    "fotoAuth": true
+  },
+  {
+    "id": 52,
+    "nombre": "Leire Corcoles Ruiz",
+    "nacimiento": "mar 9, 2015",
+    "tel": "644136926",
+    "grupo": "FLYERS+ · M-J 18:30",
+    "nivel": "FLYERS+",
+    "estado": "Activo",
+    "cuota": 65,
+    "tipo": "Mensual",
+    "pagado": false,
+    "tutorNombre": "Ana Ruiz Rubio",
+    "tutorEmail": "annirrubio@gmail.com",
+    "parentesco": "Madre",
+    "medico": "",
+    "fotoAuth": true
+  },
+  {
+    "id": 53,
+    "nombre": "Eduardo Mossi Lozano",
+    "nacimiento": "nov 12, 2015",
+    "tel": "669656874",
+    "grupo": "FLYERS+ · M-J 18:30",
+    "nivel": "FLYERS+",
+    "estado": "Activo",
+    "cuota": 180,
+    "tipo": "Trimestral",
+    "pagado": false,
+    "tutorNombre": "Lozano Ramírez Chelo",
+    "tutorEmail": "chelo_lozano_ramirez@hotmail.com",
+    "parentesco": "Madre",
+    "medico": "",
+    "fotoAuth": false
+  },
+  {
+    "id": 54,
+    "nombre": "Inés Mossi Lozano",
+    "nacimiento": "dic 18, 2012",
+    "tel": "669656874",
+    "grupo": "PET+ · M-J 16:20",
+    "nivel": "PET+",
+    "estado": "Activo",
+    "cuota": 180,
+    "tipo": "Trimestral",
+    "pagado": true,
+    "tutorNombre": "Lozano Ramírez Chelo",
+    "tutorEmail": "chelo_lozano_ramirez@hotmail.com",
+    "parentesco": "Madre",
+    "medico": "",
+    "fotoAuth": true
+  },
+  {
+    "id": 55,
+    "nombre": "Oliver Chirivella",
+    "nacimiento": "ago 5, 2017",
+    "tel": "699766050",
+    "grupo": "MOVERS+ · M-J 17:25",
+    "nivel": "MOVERS+",
+    "estado": "Activo",
+    "cuota": 180,
+    "tipo": "Trimestral",
+    "pagado": true,
+    "tutorNombre": "Cristina Rello Fijo",
+    "tutorEmail": "cristinarellofijo@gmail.com",
+    "parentesco": "Madre",
+    "medico": "",
+    "fotoAuth": true
+  },
+  {
+    "id": 56,
+    "nombre": "Maria claudia Medina Salazar",
+    "nacimiento": "sept 21, 2010",
+    "tel": "603781077",
+    "grupo": "PET+ · M-J 16:20",
+    "nivel": "PET+",
+    "estado": "Activo",
+    "cuota": 65,
+    "tipo": "Mensual",
+    "pagado": true,
+    "tutorNombre": "Lina Constanza Salazar Alzate",
+    "tutorEmail": "linita4580@gmail.com",
+    "parentesco": "Madre",
+    "medico": "",
+    "fotoAuth": true
+  },
+  {
+    "id": 57,
+    "nombre": "Carla Serrano Cid",
+    "nacimiento": "feb 15, 2014",
+    "tel": "654696444",
+    "grupo": "KET+ · M-J 15:15",
+    "nivel": "KET+",
+    "estado": "Activo",
+    "cuota": 180,
+    "tipo": "Trimestral",
+    "pagado": true,
+    "tutorNombre": "Rosa Cid Carrasco",
+    "tutorEmail": "rosa.rcc74@gmail.com",
+    "parentesco": "Madre",
+    "medico": "",
+    "fotoAuth": true
+  },
+  {
+    "id": 58,
+    "nombre": "Carla Serrano Cid",
+    "nacimiento": "jul 29, 2010",
+    "tel": "654696444",
+    "grupo": "FIRST · L-X 16:20",
+    "nivel": "FIRST",
+    "estado": "Activo",
+    "cuota": 180,
+    "tipo": "Trimestral",
+    "pagado": true,
+    "tutorNombre": "Rosa Cid Carrasco",
+    "tutorEmail": "rosa.rcc74@gmail.com",
+    "parentesco": "Madre",
+    "medico": "",
+    "fotoAuth": false
+  },
+  {
+    "id": 59,
+    "nombre": "Mishel Pisanova",
+    "nacimiento": "ago 27, 2016",
+    "tel": "652814185",
+    "grupo": "FLYERS+ · M-J 18:30",
+    "nivel": "FLYERS+",
+    "estado": "Activo",
+    "cuota": 180,
+    "tipo": "Trimestral",
+    "pagado": true,
+    "tutorNombre": "Aneliya Todorova Shabanova",
+    "tutorEmail": "aneliq.shabanova@gmail.com",
+    "parentesco": "Madre",
+    "medico": "",
+    "fotoAuth": true
+  },
+  {
+    "id": 60,
+    "nombre": "Pau Valentin Carmona",
+    "nacimiento": "feb 10, 2011",
+    "tel": "611069488",
+    "grupo": "FIRST · L-X 16:20",
+    "nivel": "FIRST",
+    "estado": "Activo",
+    "cuota": 180,
+    "tipo": "Trimestral",
+    "pagado": true,
+    "tutorNombre": "Julio Cesar Valentin Garrido",
+    "tutorEmail": "jvalentinga@hotmail.com",
+    "parentesco": "Padre",
+    "medico": "",
+    "fotoAuth": true
+  },
+  {
+    "id": 61,
+    "nombre": "Leire Valentin Carmona",
+    "nacimiento": "feb 8, 2015",
+    "tel": "681661230",
+    "grupo": "FLYERS+ · M-J 18:30",
+    "nivel": "FLYERS+",
+    "estado": "Activo",
+    "cuota": 180,
+    "tipo": "Trimestral",
+    "pagado": true,
+    "tutorNombre": "Julio Cesar Valentin Garrido",
+    "tutorEmail": "jvalentinga@hotmail.com",
+    "parentesco": "Padre",
+    "medico": "",
+    "fotoAuth": true
+  },
+  {
+    "id": 62,
+    "nombre": "Delfina Fernández Paz",
+    "nacimiento": "may 21, 2018",
+    "tel": "611630589",
+    "grupo": "MOVERS+ · M-J 17:25",
+    "nivel": "MOVERS+",
+    "estado": "Activo",
+    "cuota": 180,
+    "tipo": "Trimestral",
+    "pagado": true,
+    "tutorNombre": "Miriam Paz",
+    "tutorEmail": "miriam.a.paz.83@gmail.com",
+    "parentesco": "Madre",
+    "medico": "",
+    "fotoAuth": true
+  },
+  {
+    "id": 63,
+    "nombre": "Zaira Romero Quiros",
+    "nacimiento": "ene 8, 2010",
+    "tel": "626029440",
+    "grupo": "PET+ · M-J 16:20",
+    "nivel": "PET+",
+    "estado": "Activo",
+    "cuota": 180,
+    "tipo": "Trimestral",
+    "pagado": false,
+    "tutorNombre": "Alicia Quirós Cerrillo",
+    "tutorEmail": "alicia.qc@hotmail.com",
+    "parentesco": "Madre",
+    "medico": "",
+    "fotoAuth": true
+  },
+  {
+    "id": 64,
+    "nombre": "Aimar Romero Quirós",
+    "nacimiento": "jun 5, 2016",
+    "tel": "626029440",
+    "grupo": "FLYERS+ · M-J 18:30",
+    "nivel": "FLYERS+",
+    "estado": "Activo",
+    "cuota": 180,
+    "tipo": "Trimestral",
+    "pagado": false,
+    "tutorNombre": "Alicia Quiros Cerrillo",
+    "tutorEmail": "alicia.qc@hotmail.com",
+    "parentesco": "Madre",
+    "medico": "",
+    "fotoAuth": true
+  },
+  {
+    "id": 65,
+    "nombre": "Mar Lluesma",
+    "nacimiento": "nov 18, 2016",
+    "tel": "647077731",
+    "grupo": "FLYERS+ · M-J 18:30",
+    "nivel": "FLYERS+",
+    "estado": "Activo",
+    "cuota": 65,
+    "tipo": "Mensual",
+    "pagado": true,
+    "tutorNombre": "Noemy Solero",
+    "tutorEmail": "noemy87_algeciras@hotmail.com",
+    "parentesco": "Madre",
+    "medico": "",
+    "fotoAuth": true
+  },
+  {
+    "id": 66,
+    "nombre": "César Palomares Bermejo",
+    "nacimiento": "oct 11, 2011",
+    "tel": "669583928",
+    "grupo": "FIRST · L-X 16:20",
+    "nivel": "FIRST",
+    "estado": "Activo",
+    "cuota": 180,
+    "tipo": "Trimestral",
+    "pagado": true,
+    "tutorNombre": "Beatriz Bermejo Hernández",
+    "tutorEmail": "bbermejoh@gmail.com",
+    "parentesco": "Madre",
+    "medico": "",
+    "fotoAuth": true
+  },
+  {
+    "id": 67,
+    "nombre": "Inés Palomares Bermejo",
+    "nacimiento": "feb 2, 2015",
+    "tel": "669583928",
+    "grupo": "KET · L-X 18:30",
+    "nivel": "KET",
+    "estado": "Activo",
+    "cuota": 180,
+    "tipo": "Trimestral",
+    "pagado": true,
+    "tutorNombre": "Beatriz Bermejo Hernández",
+    "tutorEmail": "bbermejoh@gmail.com",
+    "parentesco": "Madre",
+    "medico": "",
+    "fotoAuth": true
+  }
+]
+;
+
+// ═══ DATOS ═══
+let alumnos = ALUMNOS_DATA.map((a,i) => ({...a, pagado: [true,true,true,false][i%4]}));
+let nextId = alumnos.length + 1;
+let selAlumno = null;
+
+const GRUPOS_DEF = [
+  {id:1,nombre:"STARTERS · L-X 17:25",nivel:"STARTERS",horario:"Lunes y Miércoles 17:25-18:25",etapa:"Primaria",max:8},
+  {id:2,nombre:"MOVERS+ · M-J 17:25", nivel:"MOVERS+", horario:"Martes y Jueves 17:25-18:25",  etapa:"Primaria",max:8},
+  {id:3,nombre:"FLYERS+ · M-J 18:30", nivel:"FLYERS+", horario:"Martes y Jueves 18:30-19:30",  etapa:"Primaria",max:8},
+  {id:4,nombre:"KET · L-X 18:30",     nivel:"KET",     horario:"Lunes y Miércoles 18:30-19:30",etapa:"Secundaria",max:8},
+  {id:5,nombre:"KET+ · M-J 15:15",    nivel:"KET+",    horario:"Martes y Jueves 15:15-16:15",  etapa:"Secundaria",max:8},
+  {id:6,nombre:"PET · L-X 15:15",     nivel:"PET",     horario:"Lunes y Miércoles 15:15-16:15",etapa:"Secundaria",max:8},
+  {id:7,nombre:"PET+ · M-J 16:20",    nivel:"PET+",    horario:"Martes y Jueves 16:20-17:20",  etapa:"Secundaria",max:8},
+  {id:8,nombre:"FIRST · L-X 16:20",   nivel:"FIRST",   horario:"Lunes y Miércoles 16:20-17:20",etapa:"Bachillerato",max:8},
+];
+let grupos = [...GRUPOS_DEF];
+
+const gastos = [
+  {id:1,proveedor:"Arrendador",        cat:"Alquiler",  fecha:"2025-06-01",base:700,   iva:0,    total:700,   estado:"pagado"},
+  {id:2,proveedor:"Iberdrola",         cat:"Luz",       fecha:"2025-06-05",base:118.5, iva:24.89,total:143.39,estado:"pagado"},
+  {id:3,proveedor:"Movistar",          cat:"Internet",  fecha:"2025-06-02",base:39.67, iva:8.33, total:48,    estado:"pagado"},
+  {id:4,proveedor:"Gestoría López",    cat:"Gestoría",  fecha:"2025-06-01",base:99.17, iva:20.83,total:120,   estado:"pendiente"},
+  {id:5,proveedor:"T.S.S. Autónomos", cat:"Autónomos", fecha:"2025-06-20",base:294,   iva:0,    total:294,   estado:"pendiente"},
+  {id:6,proveedor:"Limpieza XYZ",      cat:"Limpieza",  fecha:"2025-06-15",base:82.64, iva:17.36,total:100,   estado:"pagado"},
+  {id:7,proveedor:"Copistería",        cat:"Material",  fecha:"2025-06-10",base:54.55, iva:11.45,total:66,    estado:"pagado"},
+];
+
+// ═══ SIDEBAR ═══
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('show');
+}
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').classList.remove('show');
+}
+
+// ═══ NAVEGACIÓN ═══
+const titles = {dashboard:'Dashboard',alumnos:'Alumnos',ficha:'Ficha',grupos:'Grupos',ingresos:'Ingresos',gastos:'Gastos',documentos:'Documentos',irpf:'Ayuda IRPF',config:'Configuración'};
+function go(name){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  const sc = document.getElementById('screen-'+name);
+  if(sc) sc.classList.add('active');
+  document.getElementById('topTitle').textContent = titles[name]||name;
+  document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+  const map = ['dashboard','alumnos','grupos','ingresos','gastos','documentos','irpf','config'];
+  const idx = map.indexOf(name);
+  const btns = document.querySelectorAll('.nav-item');
+  if(idx>=0 && btns[idx]) btns[idx].classList.add('active');
+  closeSidebar();
+  if(name==='alumnos')   { renderAlumnos(); }
+  if(name==='grupos')    { renderGrupos(); }
+  if(name==='ingresos')  { renderKpiIngresos(); renderRecibos(); }
+  if(name==='gastos')    { renderKpiGastos(); renderGastos(); }
+  if(name==='documentos'){ renderDocs(); }
+  if(name==='irpf')      { renderIRPF(); }
+}
+
+// ═══ MODALES ═══
+function openM(id){
+  document.getElementById(id).classList.add('open');
+  const hoy = new Date().toISOString().split('T')[0];
+  document.querySelectorAll('#'+id+' input[type="date"]').forEach(i=>{if(!i.value)i.value=hoy;});
+  if(id==='m-pago'){ const sel=document.getElementById('pago-alumno'); sel.innerHTML=alumnos.filter(a=>a.estado==='Activo').map(a=>`<option>${a.nombre}</option>`).join(''); }
+}
+function closeM(id){
+  document.getElementById(id).classList.remove('open');
+  if(id==='m-matricula'){document.getElementById('mat-s1').style.display='';document.getElementById('mat-s2').style.display='none';document.getElementById('mat-save').style.display='none';}
+  if(id==='m-factura'){document.getElementById('fac-s1').style.display='';document.getElementById('fac-s2').style.display='none';document.getElementById('fac-save').style.display='none';}
+}
+document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)closeM(o.id);}));
+
+// ═══ TOAST ═══
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+// ═══ BADGE HELPERS ═══
+function bEstado(e){ const m={'Activo':'b-grn','Baja':'b-red','Pendiente':'b-amb'}; return `<span class="badge ${m[e]||'b-gray'}">${e}</span>`; }
+function bNivel(n){ return `<span class="badge b-acc" style="font-size:10.5px">${n}</span>`; }
+
+// ═══ DASHBOARD ═══
+function initDash(){
+  const hoy = new Date();
+  document.getElementById('dashFecha').textContent = hoy.toLocaleDateString('es-ES',{month:'long',year:'numeric'});
+  const activos = alumnos.filter(a=>a.estado==='Activo');
+  const pagados = activos.filter(a=>a.pagado);
+  const pendientes = activos.filter(a=>!a.pagado);
+  const cobrado = pagados.reduce((s,a)=>s+(a.tipo==='Mensual'?a.cuota:a.tipo==='Trimestral'?a.cuota/3:a.cuota/12),0)|0;
+  const porCobrar = pendientes.reduce((s,a)=>s+(a.tipo==='Mensual'?a.cuota:a.tipo==='Trimestral'?a.cuota/3:a.cuota/12),0)|0;
+  document.getElementById('kpiGrid').innerHTML=`
+    <div class="kpi grn"><div class="kpi-lbl">Cobrado este mes</div><div class="kpi-val">${cobrado.toLocaleString('es')} €</div><div class="kpi-sub">✅ ${pagados.length} alumnos</div></div>
+    <div class="kpi amb"><div class="kpi-lbl">Pendiente</div><div class="kpi-val">${porCobrar.toLocaleString('es')} €</div><div class="kpi-sub">⚠️ ${pendientes.length} alumnos</div></div>
+    <div class="kpi acc"><div class="kpi-lbl">Alumnos activos</div><div class="kpi-val">${activos.length}</div><div class="kpi-sub">${grupos.length} grupos</div></div>
+    <div class="kpi"><div class="kpi-lbl">Gastos este mes</div><div class="kpi-val">1.471 €</div><div class="kpi-sub">5 gastos registrados</div></div>
+  `;
+  // Pendientes
+  const el=document.getElementById('pendientesList');
+  const pend5=pendientes.slice(0,5);
+  el.innerHTML=pend5.length?pend5.map(a=>`
+    <div class="pay-row">
+      <div><div style="font-size:13px;font-weight:700">${a.nombre}</div><div class="text-xs text-m">${a.grupo}</div></div>
+      <div class="flex items-c gap8"><span class="fw7">${a.cuota}€</span><button class="btn btn-green btn-xs" onclick="abrirCobrar(${a.id})">💳</button></div>
+    </div>`).join(''):'<div style="padding:16px;text-align:center;color:var(--ink-m);font-size:13px">✅ Todos al día</div>';
+  // Bar chart
+  const meses=['Ene','Feb','Mar','Abr','May','Jun'];
+  const ing=[3800,3900,3750,4100,4050,cobrado];
+  const gas=[1400,1380,1420,1380,1400,1471];
+  const maxV=Math.max(...ing);
+  document.getElementById('barChart').innerHTML=meses.map((m,i)=>`
+    <div class="bc-col">
+      <div class="bc-val">${(ing[i]/1000).toFixed(1)}k</div>
+      <div class="bc-bar" style="height:${(ing[i]/maxV*72)|0}px;background:var(--acc)" title="${ing[i]}€"></div>
+      <div class="bc-bar" style="height:${(gas[i]/maxV*72)|0}px;background:var(--amb);margin-top:2px" title="${gas[i]}€"></div>
+      <div class="bc-lbl">${m}</div>
+    </div>`).join('');
+  // Grupos bars
+  const gb=document.getElementById('gruposBars');
+  gb.innerHTML=grupos.map(g=>{
+    const n=alumnos.filter(a=>a.grupo===g.nombre&&a.estado==='Activo').length;
+    const pct=Math.min((n/g.max)*100,100)|0;
+    return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+      <div style="width:130px;font-size:12px;color:var(--ink-s);flex-shrink:0">${g.nombre}</div>
+      <div style="flex:1;background:var(--brd);border-radius:4px;height:8px"><div style="width:${pct}%;height:100%;border-radius:4px;background:${pct>=100?'var(--red)':'var(--acc)'}"></div></div>
+      <div style="width:32px;text-align:right;font-size:12px;font-weight:700">${n}/${g.max}</div>
+    </div>`;
+  }).join('');
+}
+
+// ═══ ALUMNOS ═══
+function renderAlumnos(datos){
+  const lista=datos||alumnos;
+  document.getElementById('cntAlumnos').textContent=lista.length;
+  document.getElementById('tblAlumnos').innerHTML=lista.map(a=>`
+    <tr>
+      <td><div class="td-n">${a.nombre}</div>${a.medico?`<div class="text-xs" style="color:var(--red)">🏥 ${a.medico.substring(0,30)}${a.medico.length>30?'…':''}</div>`:''}</td>
+      <td><div style="font-size:12px">${a.grupo}</div></td>
+      <td>${bNivel(a.nivel)}</td>
+      <td>${a.pagado?'<span class="badge b-grn">✅</span>':'<span class="badge b-amb">⚠️</span>'}</td>
+      <td style="font-weight:700;white-space:nowrap">${a.cuota}€<span class="text-xs text-m">/${a.tipo==='Mensual'?'mes':a.tipo==='Trimestral'?'trim.':'año'}</span></td>
+      <td style="white-space:nowrap">
+        ${!a.pagado?`<button class="btn btn-green btn-xs" onclick="abrirCobrar(${a.id})">💳</button> `:''}
+        <button class="btn btn-secondary btn-xs" onclick="verFicha(${a.id})">Ver</button>
+      </td>
+    </tr>`).join('');
+}
+function filtA(){
+  const q=document.getElementById('srcAlumno').value.toLowerCase();
+  const g=document.getElementById('fltGrupo').value;
+  const p=document.getElementById('fltPago').value;
+  renderAlumnos(alumnos.filter(a=>
+    (!q||a.nombre.toLowerCase().includes(q))&&
+    (!g||a.grupo===g)&&
+    (!p||( p==='pagado'?a.pagado:!a.pagado ))
+  ));
+}
+
+// ═══ FICHA ═══
+function verFicha(id){
+  selAlumno=alumnos.find(a=>a.id===id);
+  const a=selAlumno;
+  const ini=a.nombre.split(' ').slice(0,2).map(x=>x[0]).join('').toUpperCase();
+  const pagosHist=['Ene','Feb','Mar','Abr','May','Jun'].map((m,i)=>({mes:m+' 2025',pagado:i<5||(i===5&&a.pagado),imp:a.cuota}));
+  document.getElementById('fichaBox').innerHTML=`
+    <div class="ficha-hd">
+      <div class="av">${ini}</div>
+      <div style="flex:1">
+        <div style="font-size:16px;font-weight:800">${a.nombre}</div>
+        <div class="flex gap8 mt8" style="flex-wrap:wrap">
+          ${bNivel(a.nivel)}
+          <span class="badge b-gray" style="font-size:10.5px">${a.grupo}</span>
+          ${bEstado(a.estado)}
+        </div>
+      </div>
+      <div class="flex gap8" style="flex-wrap:wrap">
+        <button class="btn btn-secondary btn-xs" onclick="openBaja(${a.id})">🚫 Baja</button>
+        ${!a.pagado?`<button class="btn btn-green btn-sm" onclick="abrirCobrar(${a.id})">💳 Cobrar</button>`:'<span class="badge b-grn">✅ Al día</span>'}
+      </div>
+    </div>
+    <div style="padding:16px">
+      <div class="tabs">
+        <button class="tab-btn active" onclick="fichaTab(this,'ft-datos')">📋 Datos</button>
+        <button class="tab-btn" onclick="fichaTab(this,'ft-pagos')">💳 Pagos</button>
+        <button class="tab-btn" onclick="fichaTab(this,'ft-edit')">✏️ Editar</button>
+      </div>
+      <div id="ft-datos">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div>
+            <div class="text-xs text-m fw7" style="text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Contacto</div>
+            <div style="font-size:13px;line-height:1.9;color:var(--ink-s)">📞 +34 ${a.tel}<br>📅 Nacimiento: ${a.nacimiento}</div>
+          </div>
+          <div>
+            <div class="text-xs text-m fw7" style="text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Familia</div>
+            <div style="font-size:13px;line-height:1.9;color:var(--ink-s)">👤 ${a.tutorNombre}<br>📌 ${a.parentesco}<br>✉️ ${a.tutorEmail}</div>
+          </div>
+        </div>
+        ${a.medico?`<div class="alerta-med">⚠️ <div><strong>Info médica:</strong> ${a.medico}</div></div>`:''}
+        <div style="margin-top:14px;padding:10px 12px;background:var(--surf);border-radius:8px">
+          <div class="text-xs text-m fw7" style="text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Académico</div>
+          <div style="font-size:13px;line-height:1.9;color:var(--ink-s)">
+            💰 Cuota: <strong>${a.cuota}€/${a.tipo==='Mensual'?'mes':a.tipo==='Trimestral'?'trim.':'año'}</strong><br>
+            📷 Fotos: ${a.fotoAuth?'✅ Autorizado':'❌ No autorizado'}
+          </div>
+        </div>
+      </div>
+      <div id="ft-pagos" style="display:none">
+        <div style="background:var(--surf);border-radius:8px;padding:10px 14px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
+          <span class="text-sm text-m">Total pagado 2025</span>
+          <span style="font-size:17px;font-weight:800;color:var(--grn)">${pagosHist.filter(p=>p.pagado).length*a.cuota}€</span>
+        </div>
+        ${pagosHist.map(p=>`
+          <div class="pay-row">
+            <div><div style="font-size:13px;font-weight:700">${p.mes}</div></div>
+            <div class="flex items-c gap8">
+              <span style="font-size:15px;font-weight:800">${p.imp}€</span>
+              ${p.pagado?'<span class="badge b-grn">✅</span>':'<span class="badge b-amb">⚠️</span>'}
+            </div>
+          </div>`).join('')}
+      </div>
+      <div id="ft-edit" style="display:none">
+        <div class="fg">
+          <div class="fgrp full"><label class="lbl">Nombre</label><input class="inp" id="ed-nom" value="${a.nombre}"></div>
+          <div class="fgrp"><label class="lbl">Grupo</label>
+            <select class="inp" id="ed-grp">${grupos.map(g=>`<option ${g.nombre===a.grupo?'selected':''}>${g.nombre}</option>`).join('')}</select>
+          </div>
+          <div class="fgrp"><label class="lbl">Nivel</label>
+            <select class="inp" id="ed-niv">${['STARTERS','MOVERS+','FLYERS+','KET','KET+','PET','PET+','FIRST'].map(n=>`<option ${n===a.nivel?'selected':''}>${n}</option>`).join('')}</select>
+          </div>
+          <div class="fgrp"><label class="lbl">Cuota (€)</label><input class="inp" type="number" id="ed-cuota" value="${a.cuota}"></div>
+          <div class="fgrp"><label class="lbl">Tipo pago</label>
+            <select class="inp" id="ed-tipo">${['Mensual','Trimestral','Anual'].map(t=>`<option ${t===a.tipo?'selected':''}>${t}</option>`).join('')}</select>
+          </div>
+        </div>
+        <button class="btn btn-primary mt12" onclick="saveEdit(${a.id})">💾 Guardar cambios</button>
+      </div>
+    </div>`;
+  go('ficha');
+}
+function fichaTab(btn,id){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  ['ft-datos','ft-pagos','ft-edit'].forEach(t=>{const e=document.getElementById(t);if(e)e.style.display=t===id?'':'none';});
+}
+function saveEdit(id){
+  const a=alumnos.find(x=>x.id===id);
+  if(!a)return;
+  a.nombre=document.getElementById('ed-nom').value;
+  a.grupo=document.getElementById('ed-grp').value;
+  a.nivel=document.getElementById('ed-niv').value;
+  a.cuota=parseFloat(document.getElementById('ed-cuota').value)||a.cuota;
+  a.tipo=document.getElementById('ed-tipo').value;
+  showToast('✅ Ficha actualizada');
+  verFicha(id);
+}
+
+// ═══ COBRAR ═══
+function abrirCobrar(id){
+  selAlumno=alumnos.find(a=>a.id===id);
+  const a=selAlumno;
+  document.getElementById('cob-nom').textContent=a.nombre;
+  document.getElementById('cob-per').textContent=a.grupo+' · '+a.tipo;
+  document.getElementById('cob-imp').value=a.cuota;
+  openM('m-cobrar');
+}
+function confirmPago(){
+  if(selAlumno){ const a=alumnos.find(x=>x.id===selAlumno.id); if(a)a.pagado=true; }
+  closeM('m-cobrar');
+  showToast('✅ Pago registrado');
+  renderAlumnos(); renderKpiIngresos(); renderRecibos(); initDash();
+}
+
+// ═══ BAJA ═══
+function openBaja(id){ selAlumno=alumnos.find(a=>a.id===id); openM('m-baja'); }
+function confirmBaja(){
+  if(selAlumno){ const a=alumnos.find(x=>x.id===selAlumno.id); if(a)a.estado='Baja'; }
+  closeM('m-baja'); showToast('✅ Alumno dado de baja'); go('alumnos');
+}
+
+// ═══ SAVE ALUMNO ═══
+function saveAlumno(){
+  const nom=document.getElementById('na-nombre').value.trim();
+  if(!nom){showToast('⚠️ Introduce el nombre');return;}
+  alumnos.unshift({id:nextId++,nombre:nom,nacimiento:document.getElementById('na-fnac').value||'',tel:document.getElementById('na-tel').value||'',grupo:document.getElementById('na-grupo').value,nivel:document.getElementById('na-grupo').value.split(' ')[0],estado:'Activo',cuota:parseFloat(document.getElementById('na-cuota').value)||65,tipo:document.getElementById('na-tipo').value,pagado:false,tutorNombre:document.getElementById('na-tutor').value||'',tutorEmail:document.getElementById('na-email').value||'',parentesco:'',medico:document.getElementById('na-medico').value||'',fotoAuth:document.getElementById('na-foto').checked});
+  closeM('m-alumno'); showToast('✅ Alumno añadido'); renderAlumnos();
+}
+
+// ═══ GRUPOS ═══
+function renderGrupos(){
+  document.getElementById('gruposGrid').innerHTML=grupos.map(g=>{
+    const miembros=alumnos.filter(a=>a.grupo===g.nombre&&a.estado==='Activo');
+    const pend=miembros.filter(a=>!a.pagado).length;
+    const cobrado=miembros.filter(a=>a.pagado).reduce((s,a)=>s+a.cuota,0);
+    const pct=Math.min((miembros.length/g.max)*100,100)|0;
+    return `<div class="grupo-card">
+      <div class="flex between items-c" style="margin-bottom:12px">
+        <div>
+          <div class="fw8" style="font-size:14px">${g.nombre}</div>
+          <div class="text-xs text-m mt8" style="margin-top:3px">${g.horario} · ${g.etapa}</div>
+        </div>
+        <span class="badge b-acc">${g.nivel}</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
+        <div style="text-align:center;background:var(--surf);border-radius:8px;padding:8px 4px">
+          <div style="font-size:20px;font-weight:800">${miembros.length}</div>
+          <div class="text-xs text-m">Alumnos</div>
+        </div>
+        <div style="text-align:center;background:${pend>0?'var(--amb-lt)':'var(--grn-lt)'};border-radius:8px;padding:8px 4px">
+          <div style="font-size:20px;font-weight:800;color:${pend>0?'var(--amb)':'var(--grn)'}">${pend}</div>
+          <div class="text-xs text-m">Pendientes</div>
+        </div>
+        <div style="text-align:center;background:var(--acc-lt);border-radius:8px;padding:8px 4px">
+          <div style="font-size:16px;font-weight:800;color:var(--acc)">${cobrado}€</div>
+          <div class="text-xs text-m">Cobrado</div>
+        </div>
+      </div>
+      <div class="flex gap8">
+        <button class="btn btn-secondary btn-xs" style="flex:1" onclick="verGrupo('${g.nombre}')">👁 Ver alumnos</button>
+      </div>
+      <div style="margin-top:10px">
+        <div class="flex between text-xs text-m" style="margin-bottom:4px"><span>Ocupación</span><span>${miembros.length}/${g.max}</span></div>
+        <div class="pb-w"><div class="pb-f" style="width:${pct}%;background:${pct>=100?'var(--red)':'var(--acc)'}"></div></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+function verGrupo(nombre){
+  document.getElementById('srcAlumno').value='';
+  document.getElementById('fltGrupo').value=nombre;
+  document.getElementById('fltPago').value='';
+  go('alumnos'); filtA();
+}
+function saveGrupo(){
+  const nom=document.getElementById('grp-nom').value.trim();
+  if(!nom){showToast('⚠️ Introduce el nombre');return;}
+  grupos.push({id:grupos.length+1,nombre:nom,nivel:document.getElementById('grp-niv').value||'—',horario:document.getElementById('grp-hor').value||'—',etapa:'Otro',max:8});
+  closeM('m-grupo'); showToast('✅ Grupo creado'); renderGrupos();
+}
+
+// ═══ INGRESOS ═══
+function renderKpiIngresos(){
+  const act=alumnos.filter(a=>a.estado==='Activo');
+  const cobrado=act.filter(a=>a.pagado).reduce((s,a)=>s+(a.tipo==='Mensual'?a.cuota:a.tipo==='Trimestral'?a.cuota/3:a.cuota/12),0)|0;
+  const pendiente=act.filter(a=>!a.pagado).reduce((s,a)=>s+(a.tipo==='Mensual'?a.cuota:a.tipo==='Trimestral'?a.cuota/3:a.cuota/12),0)|0;
+  document.getElementById('kpiIngresos').innerHTML=`
+    <div class="kpi grn"><div class="kpi-lbl">Cobrado este mes</div><div class="kpi-val">${cobrado.toLocaleString('es')}€</div><div class="kpi-sub">${act.filter(a=>a.pagado).length} alumnos</div></div>
+    <div class="kpi amb"><div class="kpi-lbl">Pendiente</div><div class="kpi-val">${pendiente.toLocaleString('es')}€</div><div class="kpi-sub">${act.filter(a=>!a.pagado).length} alumnos</div></div>
+    <div class="kpi acc"><div class="kpi-lbl">Cobrado este año</div><div class="kpi-val">${(cobrado*6).toLocaleString('es')}€</div><div class="kpi-sub">Ene–Jun 2025</div></div>
+    <div class="kpi"><div class="kpi-lbl">Tasa cobro</div><div class="kpi-val">${((act.filter(a=>a.pagado).length/act.length)*100).toFixed(0)}%</div><div class="kpi-sub">Este mes</div></div>
+  `;
+}
+function renderRecibos(datos){
+  const lista=datos||alumnos.filter(a=>a.estado==='Activo');
+  const q=document.getElementById('srcRecibo').value.toLowerCase();
+  const ep=document.getElementById('fltEPago').value;
+  const fil=lista.filter(a=>(!q||a.nombre.toLowerCase().includes(q))&&(!ep||(ep==='pagado'?a.pagado:!a.pagado)));
+  document.getElementById('tblRecibos').innerHTML=fil.map(a=>`
+    <tr>
+      <td class="td-n">${a.nombre}</td>
+      <td><div style="font-size:12px">${a.grupo}</div></td>
+      <td style="font-weight:800;white-space:nowrap">${a.cuota}€</td>
+      <td><span class="badge b-gray" style="font-size:10.5px">${a.tipo}</span></td>
+      <td>${a.pagado?'<span class="badge b-grn">✅ Pagado</span>':'<span class="badge b-amb">⚠️ Pendiente</span>'}</td>
+      <td>${!a.pagado?`<button class="btn btn-green btn-xs" onclick="abrirCobrar(${a.id})">💳 Cobrar</button>`:''}</td>
+    </tr>`).join('');
+}
+function filtR(){ renderRecibos(); }
+
+// ═══ GASTOS ═══
+function renderKpiGastos(){
+  const total=gastos.reduce((s,g)=>s+g.total,0);
+  const pend=gastos.filter(g=>g.estado==='pendiente').reduce((s,g)=>s+g.total,0);
+  document.getElementById('kpiGastos').innerHTML=`
+    <div class="kpi"><div class="kpi-lbl">Gastos este mes</div><div class="kpi-val">${total.toFixed(0)}€</div></div>
+    <div class="kpi amb"><div class="kpi-lbl">Pendiente pago</div><div class="kpi-val">${pend.toFixed(0)}€</div></div>
+    <div class="kpi"><div class="kpi-lbl">Gastos trimestre</div><div class="kpi-val">${(total*3).toFixed(0)}€</div></div>
+    <div class="kpi"><div class="kpi-lbl">Gastos este año</div><div class="kpi-val">${(total*6).toFixed(0)}€</div></div>
+  `;
+}
+function renderGastos(datos){
+  const lista=datos||gastos;
+  document.getElementById('tblGastos').innerHTML=lista.map(g=>`
+    <tr>
+      <td class="td-n">${g.proveedor}</td>
+      <td><span class="badge b-gray" style="font-size:10.5px">${g.cat}</span></td>
+      <td style="font-size:12px">${g.fecha}</td>
+      <td style="font-weight:800">${g.total.toFixed(2)}€</td>
+      <td>${g.estado==='pagado'?'<span class="badge b-grn">✅</span>':'<span class="badge b-amb">⚠️</span>'}</td>
+      <td><button class="btn btn-secondary btn-xs">Ver</button></td>
+    </tr>`).join('');
+}
+function filtG(){
+  const q=document.getElementById('srcGasto').value.toLowerCase();
+  const c=document.getElementById('fltCat').value;
+  renderGastos(gastos.filter(g=>(!q||g.proveedor.toLowerCase().includes(q))&&(!c||g.cat===c)));
+}
+
+// ═══ DOCUMENTOS ═══
+function renderDocs(){
+  const el=document.getElementById('docMatriculas');
+  if(!el)return;
+  el.innerHTML=alumnos.slice(0,12).map(a=>`
+    <div class="doc-card"><div class="di">📄</div><div class="dn">Matrícula – ${a.nombre.split(' ')[0]}</div><div class="dm">2025-2026</div></div>
+  `).join('');
+}
+
+// ═══ IRPF ═══
+function renderIRPF(){
+  const act=alumnos.filter(a=>a.estado==='Activo');
+  const mensual=act.reduce((s,a)=>s+(a.tipo==='Mensual'?a.cuota:a.tipo==='Trimestral'?a.cuota/3:a.cuota/12),0)|0;
+  const t1=mensual*3, t2=mensual*3, ttl=t1+t2;
+  const gas3=3890;
+  document.getElementById('irpfIng').textContent=t2.toLocaleString('es')+'€';
+  document.getElementById('irpfNet').textContent=(t2-gas3).toLocaleString('es')+'€';
+  document.getElementById('irpfRet').textContent=((t2-gas3)*0.15|0).toLocaleString('es')+'€';
+  document.getElementById('t1ing').textContent=t1.toLocaleString('es')+'€';
+  document.getElementById('t1ben').textContent=(t1-gas3).toLocaleString('es')+'€';
+  document.getElementById('t2ing').textContent=t2.toLocaleString('es')+'€';
+  document.getElementById('t2ben').textContent=(t2-gas3).toLocaleString('es')+'€';
+  document.getElementById('ttlIng').textContent=ttl.toLocaleString('es')+'€';
+  document.getElementById('ttlBen').textContent=(ttl-gas3*2).toLocaleString('es')+'€';
+}
+
+// ═══ IA MATRÍCULAS ═══
+function simMatricula(){
+  document.getElementById('mat-s1').style.display='none';
+  document.getElementById('mat-s2').style.display='';
+  setTimeout(()=>{
+    document.getElementById('mat-think').style.display='none';
+    document.getElementById('mat-res').style.display='';
+    document.getElementById('mat-save').style.display='';
+  },2000);
+}
+function simFactura(){
+  document.getElementById('fac-s1').style.display='none';
+  document.getElementById('fac-s2').style.display='';
+  setTimeout(()=>{
+    document.getElementById('fac-think').style.display='none';
+    document.getElementById('fac-res').style.display='';
+    document.getElementById('fac-save').style.display='';
+  },1800);
+}
+
+// ═══ IVA CALC ═══
+function calcIVA(){
+  const b=parseFloat(document.getElementById('g-base').value)||0;
+  const p=parseFloat(document.getElementById('g-ivap').value)||21;
+  const iva=b*p/100;
+  document.getElementById('g-ivae').value=iva.toFixed(2);
+  document.getElementById('g-total').value=(b+iva).toFixed(2);
+}
+
+// ═══ EXPORT CSV ═══
+function exportCSV(tipo){
+  let csv='',fn='';
+  if(tipo==='alumnos'){fn='alumnos_alex_academy.csv';csv='Nombre,Grupo,Nivel,Estado,Cuota,Tipo pago,Tutor,Email tutor,Info médica\n'+alumnos.map(a=>`"${a.nombre}","${a.grupo}","${a.nivel}","${a.estado}","${a.cuota}","${a.tipo}","${a.tutorNombre}","${a.tutorEmail}","${a.medico||''}"`).join('\n');}
+  if(tipo==='ingresos'){fn='ingresos_2025.csv';csv='Alumno,Grupo,Cuota,Tipo,Estado\n'+alumnos.filter(a=>a.estado==='Activo').map(a=>`"${a.nombre}","${a.grupo}","${a.cuota}","${a.tipo}","${a.pagado?'Pagado':'Pendiente'}"`).join('\n');}
+  if(tipo==='gastos'){fn='gastos_2025.csv';csv='Proveedor,Categoría,Fecha,Base,IVA,Total,Estado\n'+gastos.map(g=>`"${g.proveedor}","${g.cat}","${g.fecha}","${g.base}","${g.iva}","${g.total}","${g.estado}"`).join('\n');}
+  if(tipo==='irpf'){fn='irpf_2025.csv';csv='Trimestre,Ingresos,Gastos,Beneficio\n"1T 2025","~3800","3890","~-90"\n"2T 2025","~4000","3890","~110"';}
+  const b=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
+  const u=URL.createObjectURL(b);
+  const a=document.createElement('a');a.href=u;a.download=fn;a.click();URL.revokeObjectURL(u);
+  showToast('✅ Exportado: '+fn);
+}
+
+// ═══ SERVICIOS ADICIONALES ═══
+const CATALOGO = [
+  {
+    cat: "🎯 Clases Particulares — The Yellow One",
+    items: [
+      {id:"p1", tipo:"particular", nom:"Particular Inglés A1-A2",      desc:"Primaria · 1 clase",          precio:21,  bono:190},
+      {id:"p2", tipo:"particular", nom:"Particular Inglés B1-B2",      desc:"Secundaria · 1 clase",        precio:26,  bono:240},
+      {id:"p3", tipo:"particular", nom:"Particular Inglés C1-C2",      desc:"Avanzado · 1 clase",          precio:30,  bono:280},
+      {id:"p4", tipo:"particular", nom:"Particular Repaso Primaria",   desc:"Apoyo escolar · 1 clase",     precio:21,  bono:190},
+      {id:"p5", tipo:"particular", nom:"Particular Repaso Secundaria", desc:"Apoyo escolar · 1 clase",     precio:26,  bono:240},
+      {id:"p6", tipo:"particular", nom:"Particular Repaso Bachillerato",desc:"Apoyo escolar · 1 clase",    precio:30,  bono:280},
+    ]
+  },
+  {
+    cat: "🎟️ Bonos de 10 Clases (ahorro)",
+    items: [
+      {id:"b1", tipo:"bono", nom:"Bono 10 clases A1-A2",   desc:"Ahorra vs precio suelto",  precio:190, bono:null},
+      {id:"b2", tipo:"bono", nom:"Bono 10 clases B1-B2",   desc:"Ahorra vs precio suelto",  precio:240, bono:null},
+      {id:"b3", tipo:"bono", nom:"Bono 10 clases C1-C2",   desc:"Ahorra vs precio suelto",  precio:280, bono:null},
+    ]
+  },
+  {
+    cat: "🎨 Talleres en Inglés — Let's Play (viernes)",
+    items: [
+      {id:"t1", tipo:"taller", nom:"Let's Cook",  desc:"Recetas en inglés · viernes",    precio:10, bono:null},
+      {id:"t2", tipo:"taller", nom:"Let's Play",  desc:"Juegos y gincanas · viernes",    precio:10, bono:null},
+      {id:"t3", tipo:"taller", nom:"Let's Act",   desc:"Teatro y conversación · viernes",precio:10, bono:null},
+      {id:"t4", tipo:"taller", nom:"Let's DIY",   desc:"Manualidades y arte · viernes",  precio:10, bono:null},
+    ]
+  },
+  {
+    cat: "📝 Otros servicios",
+    items: [
+      {id:"o1", tipo:"matricula", nom:"Matrícula 2025-2026", desc:"Pago único de matrícula",     precio:45, bono:null},
+      {id:"o2", tipo:"material",  nom:"Material del curso",  desc:"Libros y materiales anuales", precio:45, bono:null},
+    ]
+  }
+];
+
+const DESCRIPCIONES = {
+  cuota:      "💳 Cuota mensual, trimestral o anual de clases regulares en grupo.",
+  particular: "🎯 Clase particular one-to-one. Precio por clase según nivel del alumno. Descuento con bono de 10 clases.",
+  bono:       "🎟️ Bono de 10 clases particulares con descuento. Se descuenta cada vez que se usa una clase.",
+  taller:     "🎨 Taller semanal en inglés cada viernes. Plazas limitadas. Incluye merienda.",
+  matricula:  "📝 Pago único de matrícula del curso 2025-2026. 45€.",
+  material:   "📚 Materiales del curso (libros, fotocopias, etc.). 45€ anuales.",
+};
+
+let tipoActual = 'cuota';
+let cobrosServicios = [
+  {id:1, alumno:"Hugo Sanz Naya",    servicio:"Bono 10 clases B1-B2",   tipo:"bono",       fecha:"2025-06-01", importe:240, estado:"pagado",   fpago:"Efectivo"},
+  {id:2, alumno:"Olivia Gomez",      servicio:"Clase particular B1-B2",  tipo:"particular", fecha:"2025-06-05", importe:26,  estado:"pagado",   fpago:"Bizum"},
+  {id:3, alumno:"Valeria Muñoz",     servicio:"Let's Cook",              tipo:"taller",     fecha:"2025-06-06", importe:10,  estado:"pagado",   fpago:"Efectivo"},
+  {id:4, alumno:"Neizan Carmona",    servicio:"Taller Let's Play",       tipo:"taller",     fecha:"2025-06-06", importe:10,  estado:"pagado",   fpago:"Efectivo"},
+  {id:5, alumno:"Lucia Galvez",      servicio:"Clase particular B1-B2",  tipo:"particular", fecha:"2025-06-08", importe:26,  estado:"pendiente",fpago:"Efectivo"},
+  {id:6, alumno:"Martina Alonso",    servicio:"Bono 10 clases B1-B2",   tipo:"bono",       fecha:"2025-06-10", importe:240, estado:"pagado",   fpago:"Transferencia"},
+  {id:7, alumno:"Marc Varea",        servicio:"Material del curso",      tipo:"material",   fecha:"2025-06-01", importe:45,  estado:"pagado",   fpago:"Efectivo"},
+  {id:8, alumno:"Lope Ribes",        servicio:"Matrícula 2025-2026",     tipo:"matricula",  fecha:"2025-06-02", importe:45,  estado:"pagado",   fpago:"Efectivo"},
+  {id:9, alumno:"Carlota De Dios",   servicio:"Matrícula 2025-2026",     tipo:"matricula",  fecha:"2025-06-02", importe:45,  estado:"pagado",   fpago:"Efectivo"},
+  {id:10,alumno:"Paula Ramirez",     servicio:"Clase particular B1-B2",  tipo:"particular", fecha:"2025-06-12", importe:26,  estado:"pendiente",fpago:"Bizum"},
+];
+let nextSrvId = cobrosServicios.length + 1;
+
+function ingTab(btn, id){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  ['ing-cuotas','ing-servicios','ing-historial'].forEach(t=>{
+    const el=document.getElementById(t); if(el) el.style.display= t===id?'':'none';
+  });
+  if(id==='ing-servicios') renderCatalogo();
+  if(id==='ing-historial') renderHistorial();
+}
+
+function renderCatalogo(){
+  const el=document.getElementById('catalogoServicios');
+  if(!el)return;
+  el.innerHTML = CATALOGO.map(cat=>`
+    <div class="serv-cat">${cat.cat}</div>
+    <div class="serv-items">
+      ${cat.items.map(it=>`
+        <div class="serv-item" onclick="abrirServicioRapido('${it.id}')">
+          <div class="si-nom">${it.nom}</div>
+          <div class="si-desc">${it.desc}</div>
+          <div class="si-precio">${it.precio}€${it.bono?` <span style="font-size:11px;color:var(--ink-m);font-weight:600">· Bono ${it.bono}€</span>`:''}</div>
+        </div>`).join('')}
+    </div>`).join('');
+}
+
+function abrirServicioRapido(itemId){
+  // Encontrar el item en el catálogo
+  let found = null;
+  CATALOGO.forEach(cat => cat.items.forEach(it=>{ if(it.id===itemId) found=it; }));
+  if(!found) return;
+  openM('m-servicio');
+  // Seleccionar el tipo correcto
+  document.querySelectorAll('.tipo-btn').forEach(b=>{
+    if(b.dataset.tipo===found.tipo){ b.click(); }
+  });
+  document.getElementById('srv-importe').value = found.precio;
+}
+
+function selTipo(btn, tipo){
+  tipoActual = tipo;
+  document.querySelectorAll('.tipo-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  // Mostrar/ocultar opciones dinámicas
+  ['particular','bono','taller'].forEach(t=>{
+    const el=document.getElementById('srv-opts-'+t);
+    if(el) el.style.display = t===tipo?'':'none';
+  });
+  // Actualizar descripción
+  const desc=document.getElementById('detalleServicio');
+  if(desc) desc.textContent = DESCRIPCIONES[tipo]||'';
+  autoImporte();
+}
+
+function autoImporte(){
+  const imp = document.getElementById('srv-importe');
+  if(!imp) return;
+  if(tipoActual==='cuota'){
+    const a=alumnos.find(x=>x.nombre===document.getElementById('srv-alumno').value);
+    if(a) imp.value=a.cuota;
+  } else if(tipoActual==='particular'){
+    const sel=document.getElementById('srv-nivel-part');
+    if(sel) imp.value=sel.value;
+  } else if(tipoActual==='bono'){
+    const sel=document.getElementById('srv-nivel-bono');
+    if(sel) imp.value=sel.value;
+  } else if(tipoActual==='taller'){
+    imp.value=10;
+  } else if(tipoActual==='matricula'){
+    imp.value=45;
+  } else if(tipoActual==='material'){
+    imp.value=45;
+  }
+}
+
+function guardarServicio(){
+  const alumnoNom = document.getElementById('srv-alumno').value;
+  const imp = parseFloat(document.getElementById('srv-importe').value)||0;
+  const fecha = document.getElementById('srv-fecha').value || new Date().toISOString().split('T')[0];
+  const fpago = document.getElementById('srv-fpago').value;
+  if(!alumnoNom){ showToast('⚠️ Selecciona un alumno'); return; }
+  if(imp<=0){ showToast('⚠️ Introduce el importe'); return; }
+
+  const nomServicio = {
+    cuota:'Cuota mensual', particular:'Clase particular',
+    bono:'Bono 10 clases', taller: document.getElementById('srv-taller-sel')?.options[document.getElementById('srv-taller-sel')?.selectedIndex]?.text?.split(' — ')[0] || 'Taller',
+    matricula:'Matrícula 2025-2026', material:'Material del curso'
+  }[tipoActual] || tipoActual;
+
+  cobrosServicios.unshift({
+    id: nextSrvId++, alumno:alumnoNom, servicio:nomServicio,
+    tipo:tipoActual, fecha, importe:imp, estado:'pagado', fpago
+  });
+
+  // Si es cuota, marcar como pagado en el alumno
+  if(tipoActual==='cuota'){
+    const a=alumnos.find(x=>x.nombre===alumnoNom);
+    if(a) a.pagado=true;
+  }
+
+  closeM('m-servicio');
+  showToast('✅ Cobro registrado — '+imp+'€');
+  renderKpiIngresos(); renderRecibos(); renderServicios(); initDash();
+}
+
+function renderServicios(datos){
+  const lista=datos||cobrosServicios;
+  const q=(document.getElementById('srcServicio')||{}).value?.toLowerCase()||'';
+  const t=(document.getElementById('fltTipoServ')||{}).value||'';
+  const e=(document.getElementById('fltEServ')||{}).value||'';
+  const fil=lista.filter(s=>
+    (!q||(s.alumno.toLowerCase().includes(q)||s.servicio.toLowerCase().includes(q)))&&
+    (!t||s.tipo===t)&&
+    (!e||s.estado===e)
+  );
+  const tbody=document.getElementById('tblServicios');
+  if(!tbody)return;
+  const iconos={particular:'🎯',bono:'🎟️',taller:'🎨',matricula:'📝',material:'📚',cuota:'📋'};
+  tbody.innerHTML=fil.map(s=>`
+    <tr>
+      <td class="td-n">${s.alumno}</td>
+      <td>${iconos[s.tipo]||'💳'} ${s.servicio}</td>
+      <td style="font-size:12px">${s.fecha}</td>
+      <td style="font-weight:800">${s.importe}€</td>
+      <td>${s.estado==='pagado'?'<span class="badge b-grn">✅ Pagado</span>':'<span class="badge b-amb">⚠️ Pendiente</span>'}</td>
+      <td><button class="btn btn-secondary btn-xs">Ver</button></td>
+    </tr>`).join('');
+}
+
+function filtS(){ renderServicios(); }
+
+function renderHistorial(){
+  // Combinar cuotas y servicios en un solo historial
+  const historial = [];
+  alumnos.filter(a=>a.estado==='Activo'&&a.pagado).slice(0,20).forEach(a=>{
+    historial.push({alumno:a.nombre, concepto:'Cuota '+a.tipo.toLowerCase(), fecha:'2025-06-01', importe:a.cuota, cat:'📋 Cuota'});
+  });
+  cobrosServicios.forEach(s=>{
+    historial.push({alumno:s.alumno, concepto:s.servicio, fecha:s.fecha, importe:s.importe, cat:{particular:'🎯 Particular',bono:'🎟️ Bono',taller:'🎨 Taller',matricula:'📝 Matrícula',material:'📚 Material',cuota:'📋 Cuota'}[s.tipo]||s.tipo});
+  });
+  historial.sort((a,b)=>b.fecha.localeCompare(a.fecha));
+  const tbody=document.getElementById('tblHistorial');
+  if(!tbody)return;
+  tbody.innerHTML=historial.map(h=>`
+    <tr>
+      <td class="td-n" style="font-size:12.5px">${h.alumno}</td>
+      <td style="font-size:12.5px">${h.concepto}</td>
+      <td style="font-size:12px">${h.fecha}</td>
+      <td style="font-weight:800">${h.importe}€</td>
+      <td><span class="badge b-gray" style="font-size:10px">${h.cat}</span></td>
+    </tr>`).join('');
+}
+
+// ── Ampliar renderKpiIngresos con servicios ──
+const _origKpiIngresos = renderKpiIngresos;
+renderKpiIngresos = function(){
+  _origKpiIngresos();
+  // Añadir KPI de servicios al total
+  const totalServ = cobrosServicios.filter(s=>s.estado==='pagado').reduce((sum,s)=>sum+s.importe,0);
+  const kpiGrid = document.getElementById('kpiIngresos');
+  if(kpiGrid && totalServ>0){
+    const extra = document.createElement('div');
+    extra.className='kpi';
+    extra.innerHTML=`<div class="kpi-lbl">Servicios extra</div><div class="kpi-val" style="color:var(--acc)">${totalServ}€</div><div class="kpi-sub">${cobrosServicios.filter(s=>s.estado==='pagado').length} cobros</div>`;
+    kpiGrid.appendChild(extra);
+  }
+};
+
+// ── Poblar selector de alumno en modal-servicio ──
+const _origOpenM = openM;
+openM = function(id){
+  _origOpenM(id);
+  if(id==='m-servicio'){
+    const sel=document.getElementById('srv-alumno');
+    if(sel) sel.innerHTML=alumnos.filter(a=>a.estado==='Activo').map(a=>`<option>${a.nombre}</option>`).join('');
+    // Activar descripción inicial
+    const desc=document.getElementById('detalleServicio');
+    if(desc) desc.textContent = DESCRIPCIONES['cuota'];
+    tipoActual='cuota';
+    autoImporte();
+  }
+};
+
+// ── Ampliar go() para cargar servicios ──
+const _origGo = go;
+go = function(name){
+  _origGo(name);
+  if(name==='ingresos'){ renderServicios(); }
+};
+
+// ═══ INIT ═══
+document.getElementById('dashFecha');
+initDash();
+</script>
+</body>
+</html>
